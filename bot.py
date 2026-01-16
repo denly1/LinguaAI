@@ -15,6 +15,9 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from dotenv import load_dotenv
 
+import admin_panel
+import admin_handlers
+
 
 @dataclass(frozen=True)
 class Config:
@@ -450,7 +453,7 @@ async def menu_faq(call: CallbackQuery) -> None:
 async def menu_call_doctor(call: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(HandoffState.waiting_call_doctor_type)
     await call.message.edit_text(
-        "Опишите, что происходит сейчас. Коротко.\n\nВыберите вариант:",
+        "👨‍⚕️ <b>Вызов доктора</b>\n\nОпишите, что происходит сейчас. Коротко.\n\nВыберите вариант:",
         reply_markup=kb_call_doctor_types(),
     )
     await call.answer()
@@ -462,13 +465,24 @@ async def call_doctor_type_selected(call: CallbackQuery, state: FSMContext) -> N
 
     if t == "other":
         await state.set_state(HandoffState.waiting_call_doctor_other_text)
-        await call.message.edit_text("Напишите одним сообщением, что происходит. Коротко.")
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="nav:main")]]
+        )
+        await call.message.edit_text(
+            "📝 Напишите одним сообщением, что происходит. Коротко.",
+            reply_markup=cancel_kb
+        )
         await call.answer()
         return
 
+    back_to_menu_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="nav:main")]]
+    )
     await call.message.edit_text(
-        "Спасибо. Сейчас передам информацию администратору.\n\n"
-        "Если есть угроза жизни — вызывайте скорую помощь (112/103)."
+        "✅ Спасибо. Передал информацию администратору.\n\n"
+        "Скоро с вами свяжутся.\n\n"
+        "⚠️ Если есть угроза жизни — вызывайте скорую помощь (112/103).",
+        reply_markup=back_to_menu_kb
     )
     await call.answer()
 
@@ -514,12 +528,23 @@ async def call_doctor_type_selected(call: CallbackQuery, state: FSMContext) -> N
 async def call_doctor_other_text(message: Message, state: FSMContext) -> None:
     text_user = (message.text or "").strip()
     if not text_user:
-        await message.answer("Напишите одним сообщением, что происходит. Коротко.")
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="nav:main")]]
+        )
+        await message.answer(
+            "Напишите одним сообщением, что происходит. Коротко.",
+            reply_markup=cancel_kb
+        )
         return
 
+    back_to_menu_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="nav:main")]]
+    )
     await message.answer(
-        "Спасибо. Сейчас передам информацию администратору.\n\n"
-        "Если есть угроза жизни — вызывайте скорую помощь (112/103)."
+        "✅ Спасибо. Передал информацию администратору.\n\n"
+        "Скоро с вами свяжутся.\n\n"
+        "⚠️ Если есть угроза жизни — вызывайте скорую помощь (112/103).",
+        reply_markup=back_to_menu_kb
     )
 
     cfg = load_config()
@@ -549,7 +574,10 @@ async def call_doctor_other_text(message: Message, state: FSMContext) -> None:
 
 async def menu_appointment(call: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(HandoffState.waiting_appointment_type)
-    await call.message.edit_text("Выберите тип записи:", reply_markup=kb_appointment_types())
+    await call.message.edit_text(
+        "🗓 <b>Запись на приём</b>\n\nВыберите тип записи:",
+        reply_markup=kb_appointment_types()
+    )
     await call.answer()
 
 
@@ -557,21 +585,40 @@ async def appointment_type_selected(call: CallbackQuery, state: FSMContext) -> N
     _, t = call.data.split(":", 1)
     await state.update_data(appointment_type=t)
     await state.set_state(HandoffState.waiting_appointment_text)
-    await call.message.edit_text("Коротко опишите запрос (одно сообщение).")
+    cancel_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="nav:main")]]
+    )
+    await call.message.edit_text(
+        "📝 Коротко опишите запрос (одно сообщение).",
+        reply_markup=cancel_kb
+    )
     await call.answer()
 
 
 async def appointment_text(message: Message, state: FSMContext) -> None:
     text_user = (message.text or "").strip()
     if not text_user:
-        await message.answer("Коротко опишите запрос (одно сообщение).")
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="nav:main")]]
+        )
+        await message.answer(
+            "Коротко опишите запрос (одно сообщение).",
+            reply_markup=cancel_kb
+        )
         return
 
     data = await state.get_data()
     t = data.get("appointment_type")
     t_map = {"consult": "Консультация", "exam": "Осмотр", "rehab": "Реабилитация"}
 
-    await message.answer("Спасибо. Передал(а) информацию администратору.")
+    back_to_menu_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="nav:main")]]
+    )
+    await message.answer(
+        "✅ Спасибо. Передал информацию администратору.\n\n"
+        "Скоро с вами свяжутся.",
+        reply_markup=back_to_menu_kb
+    )
 
     cfg = load_config()
     payload = (
@@ -600,7 +647,10 @@ async def appointment_text(message: Message, state: FSMContext) -> None:
 
 async def menu_admin_question(call: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(HandoffState.waiting_admin_topic)
-    await call.message.edit_text("Выберите тему вопроса:", reply_markup=kb_admin_topics())
+    await call.message.edit_text(
+        "💬 <b>Вопрос администратору</b>\n\nВыберите тему вопроса:",
+        reply_markup=kb_admin_topics()
+    )
     await call.answer()
 
 
@@ -608,14 +658,26 @@ async def admin_topic_selected(call: CallbackQuery, state: FSMContext) -> None:
     _, t = call.data.split(":", 1)
     await state.update_data(admin_topic=t)
     await state.set_state(HandoffState.waiting_admin_text)
-    await call.message.edit_text("Напишите вопрос одним сообщением.")
+    cancel_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="nav:main")]]
+    )
+    await call.message.edit_text(
+        "📝 Напишите вопрос одним сообщением.",
+        reply_markup=cancel_kb
+    )
     await call.answer()
 
 
 async def admin_text(message: Message, state: FSMContext) -> None:
     text_user = (message.text or "").strip()
     if not text_user:
-        await message.answer("Напишите вопрос одним сообщением.")
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="nav:main")]]
+        )
+        await message.answer(
+            "Напишите вопрос одним сообщением.",
+            reply_markup=cancel_kb
+        )
         return
 
     data = await state.get_data()
@@ -628,7 +690,14 @@ async def admin_text(message: Message, state: FSMContext) -> None:
         "other": "Другое",
     }
 
-    await message.answer("Спасибо. Передал(а) вопрос администратору.")
+    back_to_menu_kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="🏠 Вернуться в меню", callback_data="nav:main")]]
+    )
+    await message.answer(
+        "✅ Спасибо. Передал вопрос администратору.\n\n"
+        "Скоро с вами свяжутся.",
+        reply_markup=back_to_menu_kb
+    )
 
     cfg = load_config()
     payload = (
@@ -769,9 +838,12 @@ async def cmd_admin(message: Message) -> None:
         inline_keyboard=[
             [InlineKeyboardButton(text="📊 Статистика", callback_data="admin:stats")],
             [InlineKeyboardButton(text="📋 Активные заявки", callback_data="admin:active")],
-            [InlineKeyboardButton(text="👥 Пользователи в handoff", callback_data="admin:handoff")],
-            [InlineKeyboardButton(text="📝 Последние заявки", callback_data="admin:recent")],
+            [InlineKeyboardButton(text="📥 Экспорт данных (CSV)", callback_data="admin:export_csv")],
+            [InlineKeyboardButton(text="✏️ Редактировать тексты", callback_data="admin:edit_texts")],
+            [InlineKeyboardButton(text="👥 Управление админами", callback_data="admin:manage_admins")],
+            [InlineKeyboardButton(text="⚙️ Настройки бота", callback_data="admin:settings")],
             [InlineKeyboardButton(text="❓ Помощь", callback_data="admin:help")],
+            [InlineKeyboardButton(text="👤 Выйти в пользовательский режим", callback_data="nav:main")],
         ]
     )
     
@@ -782,7 +854,7 @@ async def cmd_admin(message: Message) -> None:
     )
 
 
-async def admin_panel_callback(call: CallbackQuery) -> None:
+async def admin_panel_callback(call: CallbackQuery, state: FSMContext) -> None:
     cfg = load_config()
     if not call.from_user or call.from_user.id not in cfg.admin_chat_ids:
         await call.answer("❌ Доступ запрещён")
@@ -841,6 +913,93 @@ async def admin_panel_callback(call: CallbackQuery) -> None:
             inline_keyboard=[[InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:back")]]
         )
         await call.message.edit_text(text, reply_markup=back_kb)
+    
+    elif action == "export_csv":
+        await call.answer("⏳ Генерирую CSV файл...")
+        
+        import csv
+        import io
+        from datetime import datetime
+        
+        async with DB_POOL.acquire() as conn:
+            users = await conn.fetch(
+                "SELECT u.user_id, u.username, u.first_name, u.last_name, u.created_at, "
+                "COUNT(r.id) as requests_count "
+                "FROM users u LEFT JOIN requests r ON u.user_id = r.user_id "
+                "GROUP BY u.user_id, u.username, u.first_name, u.last_name, u.created_at "
+                "ORDER BY u.created_at DESC"
+            )
+            
+            requests = await conn.fetch(
+                "SELECT r.id, r.user_id, u.username, r.scenario, r.topic, r.description, "
+                "r.created_at, r.status "
+                "FROM requests r JOIN users u ON r.user_id = u.user_id "
+                "ORDER BY r.created_at DESC"
+            )
+        
+        # Создаём CSV для пользователей
+        users_csv = io.StringIO()
+        users_writer = csv.writer(users_csv)
+        users_writer.writerow(['User ID', 'Username', 'First Name', 'Last Name', 'Created At', 'Requests Count'])
+        for user in users:
+            users_writer.writerow([
+                user['user_id'],
+                user['username'] or '',
+                user['first_name'] or '',
+                user['last_name'] or '',
+                user['created_at'].strftime('%Y-%m-%d %H:%M:%S'),
+                user['requests_count']
+            ])
+        
+        # Создаём CSV для заявок
+        requests_csv = io.StringIO()
+        requests_writer = csv.writer(requests_csv)
+        requests_writer.writerow(['Request ID', 'User ID', 'Username', 'Scenario', 'Topic', 'Description', 'Created At', 'Status'])
+        for req in requests:
+            requests_writer.writerow([
+                req['id'],
+                req['user_id'],
+                req['username'] or '',
+                req['scenario'],
+                req['topic'] or '',
+                req['description'],
+                req['created_at'].strftime('%Y-%m-%d %H:%M:%S'),
+                req['status']
+            ])
+        
+        # Отправляем файлы
+        from aiogram.types import BufferedInputFile
+        
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        users_file = BufferedInputFile(
+            users_csv.getvalue().encode('utf-8-sig'),
+            filename=f'users_{timestamp}.csv'
+        )
+        
+        requests_file = BufferedInputFile(
+            requests_csv.getvalue().encode('utf-8-sig'),
+            filename=f'requests_{timestamp}.csv'
+        )
+        
+        await call.message.answer_document(
+            users_file,
+            caption=f"📊 <b>Экспорт пользователей</b>\n\nВсего пользователей: {len(users)}"
+        )
+        
+        await call.message.answer_document(
+            requests_file,
+            caption=f"📋 <b>Экспорт заявок</b>\n\nВсего заявок: {len(requests)}"
+        )
+        
+        back_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:back")]]
+        )
+        await call.message.answer(
+            "✅ <b>Экспорт завершён!</b>\n\n"
+            "Файлы отправлены выше.",
+            reply_markup=back_kb
+        )
     
     elif action == "handoff":
         async with DB_POOL.acquire() as conn:
@@ -903,14 +1062,125 @@ async def admin_panel_callback(call: CallbackQuery) -> None:
         )
         await call.message.edit_text(help_text, reply_markup=back_kb)
     
+    elif action == "edit_texts":
+        edit_kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="📝 Приветствие", callback_data="edit:welcome")],
+                [InlineKeyboardButton(text="🏥 О клинике", callback_data="edit:about")],
+                [InlineKeyboardButton(text="⚠️ Критическое сообщение", callback_data="edit:critical")],
+                [InlineKeyboardButton(text="🧾 Услуги", callback_data="edit:services")],
+                [InlineKeyboardButton(text="❓ FAQ", callback_data="edit:faq")],
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:back")],
+            ]
+        )
+        await call.message.edit_text(
+            "✏️ <b>Редактирование текстов</b>\n\n"
+            "Выберите раздел для редактирования:",
+            reply_markup=edit_kb
+        )
+    
+    elif action == "manage_admins":
+        admins = admin_panel.get_admin_ids()
+        admin_list = "\n".join([f"• ID: <code>{aid}</code>" for aid in admins])
+        
+        manage_kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="➕ Добавить админа", callback_data="admin:add_admin")],
+                [InlineKeyboardButton(text="➖ Удалить админа", callback_data="admin:remove_admin")],
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:back")],
+            ]
+        )
+        await call.message.edit_text(
+            f"👥 <b>Управление администраторами</b>\n\n"
+            f"<b>Текущие админы:</b>\n{admin_list}\n\n"
+            f"Всего: {len(admins)}",
+            reply_markup=manage_kb
+        )
+    
+    elif action == "settings":
+        settings = admin_panel.get_current_settings()
+        
+        settings_kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🔗 Изменить Bitrix24 webhook", callback_data="admin:edit_bitrix")],
+                [InlineKeyboardButton(text="⬅️ Назад", callback_data="admin:back")],
+            ]
+        )
+        
+        bitrix_status = "✅ Настроен" if settings["bitrix_webhook"] != "Не настроен" else "❌ Не настроен"
+        
+        await call.message.edit_text(
+            f"⚙️ <b>Настройки бота</b>\n\n"
+            f"<b>База данных:</b>\n"
+            f"• Имя: {settings['db_name']}\n"
+            f"• Хост: {settings['db_host']}\n\n"
+            f"<b>Bitrix24 CRM:</b>\n"
+            f"• Статус: {bitrix_status}\n\n"
+            f"<b>Администраторов:</b> {len(settings['admin_ids'])}",
+            reply_markup=settings_kb
+        )
+    
+    elif action == "add_admin":
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="admin:manage_admins")]]
+        )
+        await call.message.edit_text(
+            "➕ <b>Добавление администратора</b>\n\n"
+            "Отправьте Telegram ID или @username нового администратора одним сообщением.\n\n"
+            "Примеры:\n"
+            "• <code>123456789</code> (ID)\n"
+            "• <code>@username</code> (username)",
+            reply_markup=cancel_kb
+        )
+        await state.set_state(admin_handlers.AdminEditState.adding_admin)
+        await call.answer()
+        return
+    
+    elif action == "remove_admin":
+        admins = admin_panel.get_admin_ids()
+        if len(admins) == 1:
+            await call.answer("❌ Нельзя удалить последнего админа!", show_alert=True)
+            return
+        
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="admin:manage_admins")]]
+        )
+        await call.message.edit_text(
+            "➖ <b>Удаление администратора</b>\n\n"
+            "Отправьте Telegram ID администратора для удаления.\n\n"
+            "Пример: <code>123456789</code>",
+            reply_markup=cancel_kb
+        )
+        await state.set_state(admin_handlers.AdminEditState.removing_admin)
+        await call.answer()
+        return
+    
+    elif action == "edit_bitrix":
+        cancel_kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="❌ Отмена", callback_data="admin:settings")]]
+        )
+        await call.message.edit_text(
+            "🔗 <b>Изменение Bitrix24 webhook</b>\n\n"
+            "Отправьте новый URL вебхука для Bitrix24 CRM.\n\n"
+            "Формат:\n"
+            "<code>https://your-domain.bitrix24.ru/rest/1/xxx/crm.lead.add.json</code>",
+            reply_markup=cancel_kb
+        )
+        await state.set_state(admin_handlers.AdminEditState.editing_bitrix_webhook)
+        await call.answer()
+        return
+    
     elif action == "back":
         admin_kb = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text="📊 Статистика", callback_data="admin:stats")],
                 [InlineKeyboardButton(text="📋 Активные заявки", callback_data="admin:active")],
-                [InlineKeyboardButton(text="👥 Пользователи в handoff", callback_data="admin:handoff")],
-                [InlineKeyboardButton(text="📝 Последние заявки", callback_data="admin:recent")],
+                [InlineKeyboardButton(text="📥 Экспорт данных (CSV)", callback_data="admin:export_csv")],
+                [InlineKeyboardButton(text="✏️ Редактировать тексты", callback_data="admin:edit_texts")],
+                [InlineKeyboardButton(text="👥 Управление админами", callback_data="admin:manage_admins")],
+                [InlineKeyboardButton(text="⚙️ Настройки бота", callback_data="admin:settings")],
                 [InlineKeyboardButton(text="❓ Помощь", callback_data="admin:help")],
+                [InlineKeyboardButton(text="👤 Выйти в пользовательский режим", callback_data="nav:main")],
             ]
         )
         await call.message.edit_text(
@@ -958,6 +1228,23 @@ async def main() -> None:
 
     dp.callback_query.register(nav_main, F.data == "nav:main")
     dp.callback_query.register(admin_panel_callback, F.data.startswith("admin:"))
+    
+    # Регистрация обработчиков редактирования текстов
+    dp.callback_query.register(admin_handlers.cancel_edit_callback, F.data == "cancel_edit")
+    dp.callback_query.register(admin_handlers.edit_text_callback, F.data.startswith("edit:"))
+    dp.callback_query.register(admin_handlers.edit_service_callback, F.data.startswith("edit_svc:"))
+    dp.callback_query.register(admin_handlers.edit_service_field_callback, F.data.startswith("edit_svc_field:"))
+    dp.callback_query.register(admin_handlers.edit_faq_callback, F.data.startswith("edit_faq:"))
+    
+    # Регистрация обработчика для текстовых сообщений в режиме редактирования
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.editing_welcome)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.editing_about)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.editing_critical)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.editing_service)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.editing_faq_question)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.adding_admin)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.removing_admin)
+    dp.message.register(admin_handlers.handle_text_edit, admin_handlers.AdminEditState.editing_bitrix_webhook)
 
     dp.callback_query.register(menu_about, F.data == "menu:about")
     dp.callback_query.register(menu_services, F.data == "menu:services")
