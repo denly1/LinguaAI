@@ -32,24 +32,27 @@ ensure_db() {
 
   systemctl enable --now postgresql
 
-  runuser -u postgres -- psql -v ON_ERROR_STOP=1 <<SQL
-DO $$
+  runuser -u postgres -- psql -v ON_ERROR_STOP=1 \
+    -v db_user="$db_user" \
+    -v db_password="$db_password" \
+    -v db_name="$db_name" <<'SQL'
+DO $do$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${db_user}') THEN
-    CREATE ROLE "${db_user}" LOGIN PASSWORD '${db_password}';
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'db_user') THEN
+    EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password');
   ELSE
-    ALTER ROLE "${db_user}" WITH LOGIN PASSWORD '${db_password}';
+    EXECUTE format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'db_user', :'db_password');
   END IF;
 END
-$$;
+$do$;
 
-DO $$
+DO $do$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = '${db_name}') THEN
-    CREATE DATABASE "${db_name}" OWNER "${db_user}";
+  IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'db_name') THEN
+    EXECUTE format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user');
   END IF;
 END
-$$;
+$do$;
 SQL
 }
 
