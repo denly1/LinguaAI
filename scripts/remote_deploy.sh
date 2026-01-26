@@ -13,6 +13,13 @@ read_env_var() {
   awk -F= -v k="$key" 'BEGIN{v=""} $1==k{ $1=""; sub(/^=/,"",$0); v=$0 } END{print v}' "$file"
 }
 
+sql_escape_literal() {
+  local s="$1"
+  s="${s//$'\r'/}"
+  s="${s//\'/\'\'}"
+  printf "%s" "$s"
+}
+
 ensure_db() {
   local env_file="$APP_DIR/.env"
   if [ ! -f "$env_file" ]; then
@@ -25,35 +32,34 @@ ensure_db() {
   db_user="$(read_env_var DB_USER "$env_file")"
   db_password="$(read_env_var DB_PASSWORD "$env_file")"
 
+  db_name="${db_name//$'\r'/}"
+  db_user="${db_user//$'\r'/}"
+  db_password="${db_password//$'\r'/}"
+
   if [ -z "$db_name" ] || [ -z "$db_user" ] || [ -z "$db_password" ]; then
     echo "ERROR: DB_NAME/DB_USER/DB_PASSWORD must be set in $env_file" >&2
     exit 1
   fi
 
+  if [[ ! "$db_name" =~ ^[A-Za-z0-9_]+$ ]] || [[ ! "$db_user" =~ ^[A-Za-z0-9_]+$ ]]; then
+    echo "ERROR: DB_NAME and DB_USER must contain only letters, digits, underscore" >&2
+    exit 1
+  fi
+
   systemctl enable --now postgresql
 
-  runuser -u postgres -- psql -v ON_ERROR_STOP=1 \
-    -v "db_user=$db_user" \
-    -v "db_password=$db_password" \
-    -v "db_name=$db_name" <<'SQL'
-DO $do$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'db_user') THEN
-    EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password');
-  ELSE
-    EXECUTE format('ALTER ROLE %I WITH LOGIN PASSWORD %L', :'db_user', :'db_password');
-  END IF;
-END
-$do$;
+  local pass_escaped
+  pass_escaped="$(sql_escape_literal "$db_password")"
 
-DO $do$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'db_name') THEN
-    EXECUTE format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user');
-  END IF;
-END
-$do$;
-SQL
+  if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='${db_user}'" | grep -q 1; then
+    runuser -u postgres -- psql -v ON_ERROR_STOP=1 -c "CREATE ROLE \"${db_user}\" LOGIN PASSWORD '${pass_escaped}'"
+  else
+    runuser -u postgres -- psql -v ON_ERROR_STOP=1 -c "ALTER ROLE \"${db_user}\" WITH LOGIN PASSWORD '${pass_escaped}'"
+  fi
+
+  if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1; then
+    runuser -u postgres -- psql -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"${db_name}\" OWNER \"${db_user}\""
+  fi
 }
 
 ensure_packages() {
