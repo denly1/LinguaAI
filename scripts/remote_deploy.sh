@@ -13,6 +13,17 @@ read_env_var() {
   awk -F= -v k="$key" 'BEGIN{v=""} $1==k{ $1=""; sub(/^=/,"",$0); v=$0 } END{print v}' "$file"
 }
 
+trim_env_value() {
+  local v="$1"
+  v="${v//$'\r'/}"
+  v="${v#${v%%[![:space:]]*}}"
+  v="${v%${v##*[![:space:]]}}"
+  if [[ "$v" == "\""*"\"" ]] || [[ "$v" == "'"*"'" ]]; then
+    v="${v:1:${#v}-2}"
+  fi
+  printf "%s" "$v"
+}
+
 sql_escape_literal() {
   local s="$1"
   s="${s//$'\r'/}"
@@ -32,9 +43,9 @@ ensure_db() {
   db_user="$(read_env_var DB_USER "$env_file")"
   db_password="$(read_env_var DB_PASSWORD "$env_file")"
 
-  db_name="${db_name//$'\r'/}"
-  db_user="${db_user//$'\r'/}"
-  db_password="${db_password//$'\r'/}"
+  db_name="$(trim_env_value "$db_name")"
+  db_user="$(trim_env_value "$db_user")"
+  db_password="$(trim_env_value "$db_password")"
 
   if [ -z "$db_name" ] || [ -z "$db_user" ] || [ -z "$db_password" ]; then
     echo "ERROR: DB_NAME/DB_USER/DB_PASSWORD must be set in $env_file" >&2
