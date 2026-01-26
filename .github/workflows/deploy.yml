@@ -51,8 +51,18 @@ jobs:
           scp -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa scripts/remote_deploy.sh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/remote_deploy.sh
           ssh -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "chmod +x /tmp/remote_deploy.sh"
 
-      - name: Deploy
-        env:
-          GITHUB_REF_NAME: ${{ github.ref_name }}
+      - name: Package source
         run: |
-          ssh -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export GITHUB_REF_NAME='${GITHUB_REF_NAME}'; /tmp/remote_deploy.sh"
+          tar -czf /tmp/rexab-bot-src.tar.gz \
+            --exclude=.git \
+            --exclude=.venv \
+            --exclude=__pycache__ \
+            .
+
+      - name: Upload source tarball
+        run: |
+          scp -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa /tmp/rexab-bot-src.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/rexab-bot-src.tar.gz
+
+      - name: Deploy
+        run: |
+          ssh -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "/tmp/remote_deploy.sh"

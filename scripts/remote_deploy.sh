@@ -2,8 +2,8 @@
 set -euo pipefail
 
 APP_DIR="/opt/rexab-bot"
-REPO_URL="https://github.com/denly1/RexabBot.git"
 SERVICE_NAME="rexab-bot"
+SRC_TARBALL="/tmp/rexab-bot-src.tar.gz"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -68,19 +68,14 @@ ensure_packages() {
 
 ensure_repo() {
   mkdir -p "$APP_DIR"
-  if [ -d "$APP_DIR/.git" ]; then
-    cd "$APP_DIR"
-    git fetch --all
-    git reset --hard "origin/${GITHUB_REF_NAME:-main}" || git reset --hard origin/main
-    return
+  if [ ! -f "$SRC_TARBALL" ]; then
+    echo "ERROR: $SRC_TARBALL not found. CI must upload source tarball before running deploy." >&2
+    exit 1
   fi
 
   local tmp_dir
   tmp_dir="$(mktemp -d /tmp/rexab-bot-src.XXXXXX)"
-  git clone "$REPO_URL" "$tmp_dir"
-  cd "$tmp_dir"
-  git fetch --all
-  git reset --hard "origin/${GITHUB_REF_NAME:-main}" || git reset --hard origin/main
+  tar -xzf "$SRC_TARBALL" -C "$tmp_dir"
 
   rsync -a --delete \
     --exclude ".env" \
