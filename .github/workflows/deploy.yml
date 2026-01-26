@@ -1,0 +1,58 @@
+name: CI/CD Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Basic checks
+        run: |
+          python -m compileall -q .
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SSH client
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends openssh-client
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload deploy script
+        run: |
+          scp -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa scripts/remote_deploy.sh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/tmp/remote_deploy.sh
+          ssh -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "chmod +x /tmp/remote_deploy.sh"
+
+      - name: Deploy
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          ssh -o StrictHostKeyChecking=yes -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export GITHUB_REF_NAME='${GITHUB_REF_NAME}'; /tmp/remote_deploy.sh"
