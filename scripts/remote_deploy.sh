@@ -61,18 +61,34 @@ ensure_packages() {
     python3-venv \
     python3-pip \
     ca-certificates \
+    rsync \
     postgresql \
     postgresql-contrib
 }
 
 ensure_repo() {
   mkdir -p "$APP_DIR"
-  if [ ! -d "$APP_DIR/.git" ]; then
-    git clone "$REPO_URL" "$APP_DIR"
+  if [ -d "$APP_DIR/.git" ]; then
+    cd "$APP_DIR"
+    git fetch --all
+    git reset --hard "origin/${GITHUB_REF_NAME:-main}" || git reset --hard origin/main
+    return
   fi
-  cd "$APP_DIR"
+
+  local tmp_dir
+  tmp_dir="$(mktemp -d /tmp/rexab-bot-src.XXXXXX)"
+  git clone "$REPO_URL" "$tmp_dir"
+  cd "$tmp_dir"
   git fetch --all
   git reset --hard "origin/${GITHUB_REF_NAME:-main}" || git reset --hard origin/main
+
+  rsync -a --delete \
+    --exclude ".env" \
+    --exclude ".venv" \
+    --exclude "__pycache__/" \
+    "$tmp_dir/" "$APP_DIR/"
+
+  rm -rf "$tmp_dir"
 }
 
 ensure_venv() {
