@@ -33,9 +33,9 @@ ensure_db() {
   systemctl enable --now postgresql
 
   runuser -u postgres -- psql -v ON_ERROR_STOP=1 \
-    -v db_user="$db_user" \
-    -v db_password="$db_password" \
-    -v db_name="$db_name" <<'SQL'
+    -v "db_user=$db_user" \
+    -v "db_password=$db_password" \
+    -v "db_name=$db_name" <<'SQL'
 DO $do$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'db_user') THEN
