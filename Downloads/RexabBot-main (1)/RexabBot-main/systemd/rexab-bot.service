@@ -1,0 +1,17 @@
+[Unit]
+Description=Rexab Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rexab-bot
+EnvironmentFile=/opt/rexab-bot/.env
+ExecStart=/opt/rexab-bot/.venv/bin/python /opt/rexab-bot/bot.py
+Restart=always
+RestartSec=3
+
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
