@@ -55,11 +55,45 @@ router.patch('/:id/active', async (req, res) => {
   }
 });
 
+// DELETE /api/users/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // GET /api/users/stats/admin — статистика для админа
 router.get('/stats/admin', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM admin_user_stats ORDER BY total_xp DESC');
     res.json({ success: true, stats: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/users/stats/dashboard — сводка для дашборда
+router.get('/stats/dashboard', async (req, res) => {
+  try {
+    const usersTotal = await pool.query('SELECT COUNT(*) AS total FROM users');
+    const usersToday = await pool.query("SELECT COUNT(*) AS total FROM users WHERE created_at >= CURRENT_DATE");
+    const coursesTotal = await pool.query('SELECT COUNT(*) AS total FROM courses');
+    const purchasesTotal = await pool.query('SELECT COUNT(*) AS total, COALESCE(SUM(amount),0) AS revenue FROM purchases WHERE status = $1', ['confirmed']);
+    const activeNow = await pool.query("SELECT COUNT(*) AS total FROM users WHERE last_login >= NOW() - INTERVAL '24 hours'");
+    res.json({
+      success: true,
+      stats: {
+        usersTotal: parseInt(usersTotal.rows[0].total, 10),
+        usersToday: parseInt(usersToday.rows[0].total, 10),
+        coursesTotal: parseInt(coursesTotal.rows[0].total, 10),
+        purchasesTotal: parseInt(purchasesTotal.rows[0].total, 10),
+        revenue: parseInt(purchasesTotal.rows[0].revenue, 10),
+        activeNow: parseInt(activeNow.rows[0].total, 10),
+      }
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }

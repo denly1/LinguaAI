@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen, Plus, Edit3, Trash2, Search,
-  FileText, Gamepad2, ShoppingCart, X
+  FileText, Gamepad2, ShoppingCart, X,
+  Download, Upload, Users, BarChart3, Shield
 } from 'lucide-react';
 import { useCourses, uuidv4 } from '../context/CoursesContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +13,7 @@ import {
 import { LanguageCode, DifficultyLevel } from '../types/index';
 import './ManagerPanel.css';
 
-type Tab = 'courses' | 'tests' | 'games' | 'purchases';
+type Tab = 'courses' | 'tests' | 'games' | 'purchases' | 'users' | 'reports';
 
 const LANG_OPTIONS: { value: LanguageCode; label: string }[] = [
   { value: 'en', label: '🇬🇧 Английский' },
@@ -28,7 +29,7 @@ const LEVEL_OPTIONS: { value: DifficultyLevel; label: string }[] = [
   { value: 'advanced', label: 'C1+ — Продвинутый' },
 ];
 
-const EMOJI_OPTIONS = ['🇬🇧','🇩🇪','🇫🇷','🇪🇸','🇮🇹','🇨🇳','🇯🇵','🇧🇷','📘','📗','📙','📕','🌍','✈️','🎓','💬'];
+const EMOJI_OPTIONS = ['🇬🇧','🇫🇷','🇳','📘','📗','📙','📕','🌍','✈️','🎓','💬'];
 
 // ─── CourseModal ──────────────────────────────────────────────────────────────
 interface CourseModalProps {
@@ -510,6 +511,28 @@ const ManagerPanel: React.FC = () => {
   const [aiCourseLoading, setAiCourseLoading] = useState(false);
   const [testModal, setTestModal] = useState<{ open: boolean; item: Test | null }>({ open: false, item: null });
   const [gameModal, setGameModal] = useState<{ open: boolean; item: ManagedGame | null }>({ open: false, item: null });
+  const [users, setUsers] = useState<any[]>([]);
+  const [reports, setReports] = useState<any>(null);
+  const [importModal, setImportModal] = useState(false);
+  const [importText, setImportText] = useState('');
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  // ── Load users & reports ─────────────────────────
+  useEffect(() => {
+    if (tab === 'users' && isAdmin) {
+      fetch('/api/users')
+        .then(r => r.json())
+        .then(d => { if (d.success) setUsers(d.users); })
+        .catch(console.error);
+    }
+    if (tab === 'reports' && isAdmin) {
+      fetch('/api/users/stats/dashboard')
+        .then(r => r.json())
+        .then(d => { if (d.success) setReports(d.stats); })
+        .catch(console.error);
+    }
+  }, [tab, isAdmin]);
 
   const pendingPurchases = state.purchases.filter(p => p.status === 'pending');
   const totalRevenue = state.purchases.filter(p => p.status === 'confirmed').reduce((s, p) => s + p.amount, 0);
@@ -637,6 +660,60 @@ JSON формат:
   const confirmPurchase = (id: string) => dispatch({ type: 'UPDATE_PURCHASE_STATUS', payload: { id, status: 'confirmed' } });
   const rejectPurchase = (id: string) => dispatch({ type: 'UPDATE_PURCHASE_STATUS', payload: { id, status: 'rejected' } });
 
+  // ── Export / Import ────────────────────────────────
+  const exportCsv = (endpoint: string, filename: string) => {
+    fetch(`/api/export/${endpoint}`)
+      .then(r => r.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
+  };
+
+  const importCourses = async () => {
+    try {
+      const data = JSON.parse(importText);
+      const courses = Array.isArray(data) ? data : data.courses;
+      const res = await fetch('/api/import/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courses, created_by: currentUser.id }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        alert(`Импортировано ${json.count} курсов`);
+        json.courses.forEach((c: Course) => dispatch({ type: 'ADD_COURSE', payload: c }));
+        setImportModal(false);
+        setImportText('');
+      } else {
+        alert('Ошибка импорта: ' + (json.error || 'unknown'));
+      }
+    } catch (e) {
+      alert('Неверный JSON: ' + (e as Error).message);
+    }
+  };
+
+  // ── Users ──────────────────────────────────────────
+  const updateUserRole = async (id: string, role: string) => {
+    await fetch(`/api/users/${id}/role`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
+  };
+
+  const toggleUserActive = async (id: string, isActive: boolean) => {
+    await fetch(`/api/users/${id}/active`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: isActive }) });
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, is_active: isActive } : u));
+  };
+
+  const deleteUser = async (id: string) => {
+    if (!window.confirm('Удалить пользователя? Это необратимо.')) return;
+    await fetch(`/api/users/${id}`, { method: 'DELETE' });
+    setUsers(prev => prev.filter(u => u.id !== id));
+  };
+
   const filteredPurchases = state.purchases.filter(p => {
     if (!search) return true;
     const course = state.courses.find(c => c.id === p.courseId);
@@ -681,6 +758,10 @@ JSON формат:
           { key: 'tests' as Tab, label: 'Тесты', icon: <FileText size={14} />, count: state.tests.length },
           { key: 'games' as Tab, label: 'Игры', icon: <Gamepad2 size={14} />, count: state.games.length },
           { key: 'purchases' as Tab, label: 'Заказы', icon: <ShoppingCart size={14} />, count: pendingPurchases.length },
+          ...(isAdmin ? [
+            { key: 'users' as Tab, label: 'Пользователи', icon: <Users size={14} />, count: users.length },
+            { key: 'reports' as Tab, label: 'Отчёты', icon: <BarChart3 size={14} />, count: 0 },
+          ] : []),
         ]).map(t => (
           <button
             key={t.key}
@@ -701,12 +782,20 @@ JSON формат:
               <Search size={14} color="var(--text-muted)" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по курсам..." />
             </div>
-            <button className="btn-add ai-gen-btn" onClick={() => setAiCourseModal(true)}>
-              <span>🤖</span> AI курс
-            </button>
-            <button className="btn-add" onClick={() => setCourseModal({ open: true, item: null })}>
-              <Plus size={15} /> Новый курс
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-export" onClick={() => exportCsv('courses/csv', 'courses.csv')} title="Экспорт CSV">
+                <Download size={14} /> CSV
+              </button>
+              <button className="btn-import" onClick={() => setImportModal(true)} title="Импорт JSON">
+                <Upload size={14} /> Импорт
+              </button>
+              <button className="btn-add ai-gen-btn" onClick={() => setAiCourseModal(true)}>
+                <span>🤖</span> AI курс
+              </button>
+              <button className="btn-add" onClick={() => setCourseModal({ open: true, item: null })}>
+                <Plus size={15} /> Новый курс
+              </button>
+            </div>
           </div>
           <table className="manager-table">
             <thead>
@@ -780,9 +869,21 @@ JSON формат:
               <Search size={14} color="var(--text-muted)" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по тестам..." />
             </div>
-            <button className="btn-add" onClick={() => setTestModal({ open: true, item: null })}>
-              <Plus size={15} /> Новый тест
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-export" onClick={() => {
+                const headers = ['id','title','language','level','questions_count','timeLimit','isPublic'];
+                const rows = state.tests.map(t => [t.id, t.title, t.language, t.level, t.questions.length, t.timeLimit ?? '', t.isPublic].join(';'));
+                const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'tests.csv'; a.click(); URL.revokeObjectURL(url);
+              }}>
+                <Download size={14} /> CSV
+              </button>
+              <button className="btn-add" onClick={() => setTestModal({ open: true, item: null })}>
+                <Plus size={15} /> Новый тест
+              </button>
+            </div>
           </div>
           {filteredTests.length === 0 ? (
             <div className="empty-tab">
@@ -842,9 +943,21 @@ JSON формат:
               <Search size={14} color="var(--text-muted)" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по играм..." />
             </div>
-            <button className="btn-add" onClick={() => setGameModal({ open: true, item: null })}>
-              <Plus size={15} /> Новая игра
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn-export" onClick={() => {
+                const headers = ['id','title','type','language','level','wordPairs','isPublic'];
+                const rows = state.games.map(g => [g.id, g.title, g.type, g.language, g.level, g.wordPairs?.length || 0, g.isPublic].join(';'));
+                const csv = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'games.csv'; a.click(); URL.revokeObjectURL(url);
+              }}>
+                <Download size={14} /> CSV
+              </button>
+              <button className="btn-add" onClick={() => setGameModal({ open: true, item: null })}>
+                <Plus size={15} /> Новая игра
+              </button>
+            </div>
           </div>
           {filteredGames.length === 0 ? (
             <div className="empty-tab">
@@ -904,8 +1017,13 @@ JSON формат:
               <Search size={14} color="var(--text-muted)" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по заказам..." />
             </div>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              Всего заказов: {state.purchases.length} · Ожидают: {pendingPurchases.length}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button className="btn-export" onClick={() => exportCsv('purchases/csv', 'purchases.csv')}>
+                <Download size={14} /> CSV
+              </button>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                Всего: {state.purchases.length} · Ожидают: {pendingPurchases.length}
+              </div>
             </div>
           </div>
 
@@ -952,6 +1070,210 @@ JSON формат:
             </div>
           )}
         </>
+      )}
+
+      {/* ── USERS (admin only) ───────────────────────────── */}
+      {tab === 'users' && isAdmin && (
+        <>
+          <div className="manager-toolbar">
+            <div className="manager-search">
+              <Search size={14} color="var(--text-muted)" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по пользователям..." />
+            </div>
+            <button className="btn-export" onClick={() => exportCsv('users/csv', 'users.csv')}>
+              <Download size={14} /> CSV
+            </button>
+          </div>
+          {users.length === 0 ? (
+            <div className="empty-tab">
+              <div className="empty-tab-icon">👤</div>
+              <div className="empty-tab-title">Нет данных</div>
+            </div>
+          ) : (
+            <table className="manager-table">
+              <thead>
+                <tr>
+                  <th>Пользователь</th>
+                  <th>Email</th>
+                  <th>Роль</th>
+                  <th>Активен</th>
+                  <th>XP</th>
+                  <th>Streak</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.filter(u => (u.name + u.email).toLowerCase().includes(search.toLowerCase())).map(u => (
+                  <tr key={u.id}>
+                    <td style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 20 }}>{u.avatar || '👤'}</span>
+                      <span style={{ fontWeight: 600 }}>{u.name}</span>
+                    </td>
+                    <td>{u.email}</td>
+                    <td>
+                      <select
+                        className="user-role-select"
+                        value={u.role}
+                        onChange={e => updateUserRole(u.id, e.target.value)}
+                      >
+                        <option value="guest">Гость</option>
+                        <option value="user">Пользователь</option>
+                        <option value="manager">Менеджер</option>
+                        <option value="admin">Админ</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button
+                        className="tbl-btn"
+                        onClick={() => toggleUserActive(u.id, !u.is_active)}
+                        title={u.is_active ? 'Заблокировать' : 'Разблокировать'}
+                      >
+                        <span className={`user-active-dot ${u.is_active ? 'active' : 'inactive'}`} />
+                        {u.is_active ? 'Да' : 'Нет'}
+                      </button>
+                    </td>
+                    <td>{u.total_xp}</td>
+                    <td>{u.streak}</td>
+                    <td>
+                      <button className="tbl-btn danger" onClick={() => deleteUser(u.id)}>
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+
+      {/* ── REPORTS (admin only) ─────────────────────────── */}
+      {tab === 'reports' && isAdmin && (
+        <>
+          <div className="manager-toolbar">
+            <div style={{ fontSize: 16, fontWeight: 700 }}>📊 Сводная статистика</div>
+            <button className="btn-export" onClick={() => exportCsv('stats/csv', 'stats.csv')}>
+              <Download size={14} /> CSV
+            </button>
+          </div>
+
+          {reports && (
+            <>
+              <div className="reports-grid">
+                <div className="report-card">
+                  <div className="report-card-value">{reports.usersTotal}</div>
+                  <div className="report-card-label">Всего пользователей</div>
+                  <div className="report-card-delta up">+{reports.usersToday} сегодня</div>
+                </div>
+                <div className="report-card">
+                  <div className="report-card-value">{reports.activeNow}</div>
+                  <div className="report-card-label">Активны за 24ч</div>
+                </div>
+                <div className="report-card">
+                  <div className="report-card-value">{reports.coursesTotal}</div>
+                  <div className="report-card-label">Всего курсов</div>
+                </div>
+                <div className="report-card">
+                  <div className="report-card-value">{reports.purchasesTotal}</div>
+                  <div className="report-card-label">Покупок</div>
+                </div>
+                <div className="report-card">
+                  <div className="report-card-value">{reports.revenue.toLocaleString('ru-RU')} ₽</div>
+                  <div className="report-card-label">Выручка</div>
+                </div>
+              </div>
+
+              {/* Course popularity chart */}
+              <div className="chart-section">
+                <div className="chart-title">🔥 Популярность курсов (по студентам)</div>
+                <div className="bar-chart">
+                  {state.courses
+                    .filter(c => c.totalStudents > 0)
+                    .sort((a, b) => b.totalStudents - a.totalStudents)
+                    .slice(0, 8)
+                    .map(c => {
+                      const max = Math.max(...state.courses.map(x => x.totalStudents), 1);
+                      const pct = Math.round((c.totalStudents / max) * 100);
+                      return (
+                        <div key={c.id} className="bar-row">
+                          <div className="bar-label">{c.emoji} {c.title.slice(0, 18)}</div>
+                          <div className="bar-track">
+                            <div className="bar-fill" style={{ width: `${pct}%`, background: c.coverColor || '#6366f1' }}>
+                              <span>{c.totalStudents}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {state.courses.filter(c => c.totalStudents > 0).length === 0 && (
+                    <div style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 20 }}>
+                      Нет данных о студентах
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Revenue by tier */}
+              <div className="chart-section">
+                <div className="chart-title">💰 Выручка по тарифам</div>
+                <div className="bar-chart">
+                  {(['standard', 'medium', 'premium'] as const).map(tier => {
+                    const revenue = state.purchases
+                      .filter(p => p.status === 'confirmed' && p.tier === tier)
+                      .reduce((s, p) => s + p.amount, 0);
+                    const max = Math.max(
+                      ...(['standard', 'medium', 'premium'] as const).map(t =>
+                        state.purchases.filter(p => p.status === 'confirmed' && p.tier === t).reduce((s, p) => s + p.amount, 0)
+                      ),
+                      1
+                    );
+                    const pct = Math.round((revenue / max) * 100);
+                    const color = tier === 'standard' ? '#3b82f6' : tier === 'medium' ? '#8b5cf6' : '#f59e0b';
+                    return (
+                      <div key={tier} className="bar-row">
+                        <div className="bar-label">{TIER_CONFIG[tier].label}</div>
+                        <div className="bar-track">
+                          <div className="bar-fill" style={{ width: `${pct}%`, background: color }}>
+                            <span>{revenue.toLocaleString('ru-RU')} ₽</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
+      {/* ── Import Modal ───────────────────────────────────── */}
+      {importModal && (
+        <div className="mgr-modal-overlay" onClick={() => setImportModal(false)}>
+          <div className="mgr-modal" onClick={e => e.stopPropagation()}>
+            <div className="mgr-modal-header">
+              <span className="mgr-modal-title">📥 Импорт курсов (JSON)</span>
+              <button className="mgr-modal-close" onClick={() => setImportModal(false)}><X size={16} /></button>
+            </div>
+            <div className="mgr-modal-body">
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Вставьте JSON-массив курсов. Каждый объект должен содержать: title, description, language, level, tier, price, cover_color, emoji, features[]
+              </div>
+              <textarea
+                className="import-textarea"
+                value={importText}
+                onChange={e => setImportText(e.target.value)}
+                placeholder={`[\n  {\n    "title": "Английский для путешествий",\n    "description": "Курс",\n    "language": "en",\n    "level": "beginner",\n    "tier": "standard",\n    "price": 990,\n    "cover_color": "#3b82f6",\n    "emoji": "🇬🇧",\n    "features": ["10 уроков", "Флеш-карточки"]\n  }\n]`}
+              />
+            </div>
+            <div className="mgr-modal-footer">
+              <button className="btn-cancel" onClick={() => setImportModal(false)}>Отмена</button>
+              <button className="btn-save" onClick={importCourses} disabled={!importText.trim()}>
+                <Upload size={14} /> Импортировать
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modals */}

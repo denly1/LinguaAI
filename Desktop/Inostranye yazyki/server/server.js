@@ -17,6 +17,8 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/purchases', require('./routes/purchases'));
+app.use('/api/export', require('./routes/export'));
+app.use('/api/import', require('./routes/import'));
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, model: OPENROUTER_MODEL, time: new Date().toISOString() });
