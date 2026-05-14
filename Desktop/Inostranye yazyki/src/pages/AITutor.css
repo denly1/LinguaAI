@@ -340,3 +340,23 @@
   text-align: center;
   padding: 8px;
 }
+
+.ai-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: var(--brand);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ai-test-btn:hover {
+  background: var(--brand-hover);
+}

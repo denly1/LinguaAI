@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Brain, Send, RefreshCw, Lightbulb, BookOpen, Zap, Target } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Brain, Send, RefreshCw, Lightbulb, BookOpen, Zap, Target, ArrowRight } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getAIRecommendations, generateAITip, getAdaptiveNextLevel, generateExercises } from '../services/aiService';
 import { LANGUAGE_NAMES } from '../data/sampleData';
@@ -10,6 +11,7 @@ interface Message {
   role: 'ai' | 'user';
   text: string;
   timestamp: Date;
+  testPath?: string;
 }
 
 const QUICK_QUESTIONS = [
@@ -24,6 +26,7 @@ const QUICK_QUESTIONS = [
 const AI_CHAT_URL = '/api/ai-chat';
 
 const AITutor: React.FC = () => {
+  const navigate = useNavigate();
   const { state } = useApp();
   const { user, flashcards, dictionaries, currentLanguage } = state;
 
@@ -77,7 +80,9 @@ const AITutor: React.FC = () => {
 5. Если даёшь упражнение или пример — оформляй его отдельным абзацем с отступом.
 6. Отвечай только на русском языке, если пользователь не попросил иначе.
 7. Специализируйся на: произношении, грамматике, лексике, методиках запоминания, культурном контексте языка.
-8. Будь кратким и конкретным — избегай воды и общих фраз.`;
+8. Будь кратким и конкретным — избегай воды и общих фраз.
+9. Если пользователь хочет пройти тест, проверить знания или попрактиковаться — в конце ответа добавь маркер [TEST:/games/speed] (скоростной раунд) или [TEST:/flashcards] (карточки).`;
+
 
   const sendMessage = async (text?: string) => {
     const msgText = text || input.trim();
@@ -122,7 +127,10 @@ const AITutor: React.FC = () => {
         data?.content ||
         data?.choices?.[0]?.message?.content ||
         'Не удалось получить ответ. Попробуйте ещё раз.';
+      const testMatch = rawText.match(/\[TEST:([^\]]+)\]/);
+      const testPath = testMatch ? testMatch[1] : undefined;
       const aiText = rawText
+        .replace(/\[TEST:[^\]]+\]/g, '')
         .replace(/\*\*(.+?)\*\*/g, '$1')
         .replace(/\*(.+?)\*/g, '$1')
         .replace(/^[\s]*[-–—]{2,}[\s]*$/gm, '')
@@ -133,6 +141,7 @@ const AITutor: React.FC = () => {
         role: 'ai',
         text: aiText,
         timestamp: new Date(),
+        testPath,
       }]);
     } catch (err) {
       setMessages(prev => [...prev, {
@@ -181,6 +190,14 @@ const AITutor: React.FC = () => {
                   {msg.text.split('\n').map((line, i) => (
                     <span key={i}>{line}{i < msg.text.split('\n').length - 1 && <br />}</span>
                   ))}
+                  {msg.role === 'ai' && msg.testPath && (
+                    <button
+                      className="ai-test-btn"
+                      onClick={() => navigate(msg.testPath!)}
+                    >
+                      Пройти тест <ArrowRight size={14} />
+                    </button>
+                  )}
                   <div className="msg-time">
                     {msg.timestamp.toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
                   </div>
