@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain, Send, RefreshCw, Lightbulb, BookOpen, Zap, Target, ArrowRight } from 'lucide-react';
+import { Brain, Send, RefreshCw, Lightbulb, BookOpen, Zap, Target, ArrowRight, Trash2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getAIRecommendations, generateAITip, getAdaptiveNextLevel, generateExercises } from '../services/aiService';
 import { LANGUAGE_NAMES } from '../data/sampleData';
@@ -30,21 +30,28 @@ const AITutor: React.FC = () => {
   const { state } = useApp();
   const { user, flashcards, dictionaries, currentLanguage } = state;
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = localStorage.getItem('linguaai_chat');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
+      } catch { /* ignore */ }
+    }
+    return [{
       id: '1',
       role: 'ai',
-      text: `Привет, ${user?.name}! Я ваш персональный тьютор. 💬
-
-Вы изучаете ${LANGUAGE_NAMES[currentLanguage]} — ${user?.learningLanguages.find(l => l.language === currentLanguage)?.studySessions.length || 0} занятий проведено, точность: ${user?.learningLanguages.find(l => l.language === currentLanguage)?.accuracy || 0}%.
-
-Чем могу помочь?`,
+      text: `Привет, ${user?.name || 'студент'}! Я ваш персональный тьютор.`,
       timestamp: new Date(),
-    }
-  ]);
+    }];
+  });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    localStorage.setItem('linguaai_chat', JSON.stringify(messages));
+  }, [messages]);
 
   const allWords = dictionaries.flatMap(d => d.words);
   const recommendations = user ? getAIRecommendations(user, flashcards) : [];
@@ -81,7 +88,12 @@ const AITutor: React.FC = () => {
 6. Отвечай только на русском языке, если пользователь не попросил иначе.
 7. Специализируйся на: произношении, грамматике, лексике, методиках запоминания, культурном контексте языка.
 8. Будь кратким и конкретным — избегай воды и общих фраз.
-9. Если пользователь хочет пройти тест, проверить знания или попрактиковаться — в конце ответа добавь маркер [TEST:/games/speed] (скоростной раунд) или [TEST:/flashcards] (карточки).`;
+9. Если пользователь хочет пройти тест, проверить знания или попрактиковаться — в конце ответа добавь маркер:
+   - [TEST:/games/speed] — скоростной раунд
+   - [TEST:/games/matching] — игра на соответствие
+   - [TEST:/flashcards] — карточки для повторения
+   - [TEST:/games] — раздел с играми`;
+
 
 
   const sendMessage = async (text?: string) => {
@@ -166,18 +178,32 @@ const AITutor: React.FC = () => {
     setMessages(prev => [...prev, msg]);
   };
 
+  const clearChat = () => {
+    setMessages([{
+      id: Date.now().toString(),
+      role: 'ai',
+      text: `Привет, ${user?.name || 'студент'}! Я ваш персональный тьютор.`,
+      timestamp: new Date(),
+    }]);
+  };
+
   return (
     <div className="ai-tutor-page">
       <div className="ai-tutor-layout">
         <div className="ai-chat-panel">
           <div className="ai-chat-header">
-            <div className="ai-avatar">
-              <Brain size={20} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="ai-avatar">
+                <Brain size={20} />
+              </div>
+              <div>
+                <div className="ai-name">LinguaAI Тьютор</div>
+                <div className="ai-status">Ассистент · онлайн</div>
+              </div>
             </div>
-            <div>
-              <div className="ai-name">LinguaAI Тьютор</div>
-              <div className="ai-status">Ассистент · онлайн</div>
-            </div>
+            <button className="ai-clear-btn" onClick={clearChat} title="Очистить чат">
+              <Trash2 size={14} />
+            </button>
           </div>
 
           <div className="ai-messages">
