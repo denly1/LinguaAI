@@ -47,6 +47,42 @@
   color: var(--text);
 }
 
+.ai-mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  overflow-x: auto;
+}
+
+.ai-mode-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.ai-mode-tab.active {
+  background: var(--brand-soft);
+  border-color: var(--brand-border);
+  color: var(--brand);
+}
+
+.ai-mode-tab:hover:not(.active) {
+  background: var(--bg-card2);
+  color: var(--text);
+}
+
 .ai-avatar {
   width: 40px;
   height: 40px;
@@ -386,4 +422,30 @@
 
 .ai-dict-btn:hover {
   background: #1a8f55;
+}
+
+@media (max-width: 768px) {
+  .ai-tutor-layout {
+    grid-template-columns: 1fr;
+  }
+  .ai-sidebar {
+    display: none;
+  }
+  .ai-chat-panel {
+    border-right: none;
+  }
+  .ai-messages {
+    padding: 12px;
+  }
+  .msg-bubble {
+    max-width: 85%;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  .ai-input-area {
+    padding: 10px 12px;
+  }
+  .quick-questions {
+    padding: 8px 12px;
+  }
 }

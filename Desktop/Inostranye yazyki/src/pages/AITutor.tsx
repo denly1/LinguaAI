@@ -17,14 +17,43 @@ interface Message {
   dictTopic?: string;
 }
 
-const QUICK_QUESTIONS = [
-  'Как улучшить произношение?',
-  'Советы по запоминанию слов',
-  'Как поддерживать мотивацию?',
-  'Лучший метод изучения языка',
-  'Как часто нужно заниматься?',
-  'Объясни систему повторений',
+type AIMode = 'tutor' | 'translate' | 'grammar' | 'dialog';
+
+const MODES: { key: AIMode; label: string; icon: string }[] = [
+  { key: 'tutor', label: 'Тьютор', icon: '💬' },
+  { key: 'translate', label: 'Переводчик', icon: '🌐' },
+  { key: 'grammar', label: 'Грамматика', icon: '📖' },
+  { key: 'dialog', label: 'Диалоги', icon: '🎭' },
 ];
+
+const QUICK_QUESTIONS: Record<AIMode, string[]> = {
+  tutor: [
+    'Как улучшить произношение?',
+    'Советы по запоминанию слов',
+    'Как поддерживать мотивацию?',
+    'Лучший метод изучения языка',
+    'Как часто нужно заниматься?',
+    'Объясни систему повторений',
+  ],
+  translate: [
+    'Как сказать "спасибо" на английском?',
+    'Переведи фразу "я люблю путешествовать"',
+    'Переведи предложение с контекстом',
+    'Какие есть синонимы слова "хороший"?',
+  ],
+  grammar: [
+    'Объясни Present Perfect',
+    'Когда использовать артикли?',
+    'Разница между say и tell',
+    'Объясни условные предложения',
+  ],
+  dialog: [
+    'Придумай диалог в магазине',
+    'Создай историю про путешествие',
+    'Диалог на тему "Знакомство"',
+    'Расскажи историю на прошедшее время',
+  ],
+};
 
 const AI_CHAT_URL = '/api/ai-chat';
 
@@ -48,6 +77,7 @@ const AITutor: React.FC = () => {
       timestamp: new Date(),
     }];
   });
+  const [mode, setMode] = useState<AIMode>('tutor');
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -55,6 +85,10 @@ const AITutor: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('linguaai_chat', JSON.stringify(messages));
   }, [messages]);
+
+  useEffect(() => {
+    localStorage.setItem('linguaai_chat_mode', mode);
+  }, [mode]);
 
   const allWords = dictionaries.flatMap(d => d.words);
   const recommendations = user ? getAIRecommendations(user, flashcards) : [];
@@ -72,31 +106,21 @@ const AITutor: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const systemPrompt = `Ты персональный преподаватель иностранных языков в образовательном приложении LinguaAI. Твоя задача — помогать пользователю эффективно изучать языки.
-
-Данные пользователя:
-- Имя: ${user?.name || 'студент'}
-- Изучает: ${LANGUAGE_NAMES[currentLanguage]}
-- Точность: ${langProgress?.accuracy || 0}%
-- Слов изучено: ${langProgress?.wordsLearned || 0}
-- Учебная серия: ${user?.streak || 0} дней
-- Карточек к повторению сегодня: ${dueCards.length}
-
-Правила форматирования ответов:
-1. Не используй символы * ** для выделения текста — никогда.
-2. Не используй маркированные списки со звёздочками. Для перечислений используй цифры (1. 2. 3.) или дефис (- ).
-3. Пиши естественным живым языком, как опытный преподаватель.
-4. Ответы должны быть структурированными, но читаемыми — используй абзацы и пустые строки между ними.
-5. Если даёшь упражнение или пример — оформляй его отдельным абзацем с отступом.
-6. Отвечай только на русском языке, если пользователь не попросил иначе.
-7. Специализируйся на: произношении, грамматике, лексике, методиках запоминания, культурном контексте языка.
-8. Будь кратким и конкретным — избегай воды и общих фраз.
-9. Если пользователь хочет пройти тест, проверить знания или попрактиковаться — в конце ответа добавь маркер:
-   - [TEST:/games/speed] — скоростной раунд
-   - [TEST:/games/matching] — игра на соответствие
-   - [TEST:/flashcards] — карточки для повторения
-   - [TEST:/games] — раздел с играми
-10. Если пользователь просит составить словарь — дай список слов в формате "слово — перевод" (по одной паре на строку) и добавь маркер [DICT:Название темы]`;
+  const getSystemPrompt = (m: AIMode): string => {
+    const base = `Ты персональный преподаватель иностранных языков в приложении LinguaAI. Пользователь изучает ${LANGUAGE_NAMES[currentLanguage]}. Отвечай на русском, если не попросили иначе. Не используй ** или *.`;
+    switch (m) {
+      case 'tutor': return `${base}
+Ты — тьютор. Помогай с произношением, грамматикой, лексикой, методиками запоминания.
+Если пользователь хочет тест — добавь маркер [TEST:/games/speed], [TEST:/games/matching], [TEST:/flashcards] или [TEST:/games].
+Если просит словарь — дай список "слово — перевод" и маркер [DICT:тема].`;
+      case 'translate': return `${base}
+Ты — переводчик. Переводи точно, но живо. Давай контекст использования, синонимы, примеры предложений. Если слово имеет несколько значений — перечисли их.`;
+      case 'grammar': return `${base}
+Ты — эксперт по грамматике. Объясняй правила простым языком, давай примеры, показывай типичные ошибки. Используй сравнительные таблицы где уместно.`;
+      case 'dialog': return `${base}
+Ты — автор диалогов и историй. Создавай интересные диалоги и короткие истории для изучаемого языка. Указывай уровень сложности (A1-C2). Давай перевод ключевых фраз.`;
+    }
+  };
 
 
 
@@ -126,7 +150,7 @@ const AITutor: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [
-            { role: 'system', content: systemPrompt },
+            { role: 'system', content: getSystemPrompt(mode) },
             ...history,
             { role: 'user', content: msgText },
           ],
@@ -252,6 +276,18 @@ const AITutor: React.FC = () => {
             </button>
           </div>
 
+          <div className="ai-mode-tabs">
+            {MODES.map(m => (
+              <button
+                key={m.key}
+                className={`ai-mode-tab ${mode === m.key ? 'active' : ''}`}
+                onClick={() => setMode(m.key)}
+              >
+                <span>{m.icon}</span> {m.label}
+              </button>
+            ))}
+          </div>
+
           <div className="ai-messages">
             {messages.map(msg => (
               <div key={msg.id} className={`message ${msg.role}`}>
@@ -300,7 +336,7 @@ const AITutor: React.FC = () => {
           </div>
 
           <div className="quick-questions">
-            {QUICK_QUESTIONS.map(q => (
+            {QUICK_QUESTIONS[mode].map((q: string) => (
               <button key={q} className="quick-q" onClick={() => sendMessage(q)}>{q}</button>
             ))}
           </div>
@@ -308,7 +344,12 @@ const AITutor: React.FC = () => {
           <div className="ai-input-area">
             <input
               className="ai-input"
-              placeholder="Задайте вопрос тьютору..."
+              placeholder={
+                mode === 'tutor' ? 'Задайте вопрос тьютору...' :
+                mode === 'translate' ? 'Введите фразу для перевода...' :
+                mode === 'grammar' ? 'Спросите про грамматику...' :
+                'Опишите, какой диалог нужен...'
+              }
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
