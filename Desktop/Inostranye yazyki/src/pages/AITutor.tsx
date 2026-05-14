@@ -21,10 +21,7 @@ const QUICK_QUESTIONS = [
   'Объясни систему повторений',
 ];
 
-// URL серверного прокси для чат-запросов.
-const AI_CHAT_URL =
-  (process.env.REACT_APP_AI_CHAT_URL as string | undefined) ||
-  'http://localhost:3001/api/ai-chat';
+const AI_CHAT_URL = '/api/ai-chat';
 
 const AITutor: React.FC = () => {
   const { state } = useApp();

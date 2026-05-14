@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:3001/api';
+const BASE = '/api';
 
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -10,7 +10,6 @@ async function request<T>(path: string, opts?: RequestInit): Promise<T> {
   return json as T;
 }
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
 export const apiLogin = (email: string, password: string) =>
   request<{ success: boolean; user: ApiUser }>('/auth/login', {
     method: 'POST',
@@ -23,7 +22,6 @@ export const apiRegister = (name: string, email: string, password: string) =>
     body: JSON.stringify({ name, email, password }),
   });
 
-// ── Users ────────────────────────────────────────────────────────────────────
 export const apiGetUsers = () =>
   request<{ success: boolean; users: ApiUser[] }>('/users');
 
@@ -39,7 +37,6 @@ export const apiToggleUserActive = (id: string, is_active: boolean) =>
     body: JSON.stringify({ is_active }),
   });
 
-// ── Courses ──────────────────────────────────────────────────────────────────
 export const apiGetCourses = () =>
   request<{ success: boolean; courses: ApiCourse[] }>('/courses');
 
@@ -58,7 +55,6 @@ export const apiUpdateCourseStatus = (id: string, status: string) =>
     body: JSON.stringify({ status }),
   });
 
-// ── Purchases ────────────────────────────────────────────────────────────────
 export const apiGetPurchases = (userId: string) =>
   request<{ success: boolean; purchases: ApiPurchase[] }>(`/purchases/${userId}`);
 
@@ -76,7 +72,7 @@ export const apiCreatePurchase = (data: {
     body: JSON.stringify(data),
   });
 
-// ── Types ────────────────────────────────────────────────────────────────────
+
 export interface ApiUser {
   id: string;
   email: string;

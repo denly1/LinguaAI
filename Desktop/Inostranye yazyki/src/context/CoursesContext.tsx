@@ -337,7 +337,7 @@ export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children })
     // Отправка email-чека
     const course = state.courses.find(c => c.id === courseId);
     if (course && payerEmail) {
-      fetch('http://localhost:3001/api/send-receipt', {
+      fetch('/api/send-receipt', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

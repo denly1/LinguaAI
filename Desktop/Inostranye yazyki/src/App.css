@@ -28,42 +28,40 @@
    ТЕМЫ
    ═══════════════════════════════════════════════ */
 
-/* Тёмная тема (по умолчанию) */
 :root,
 .theme-dark {
-  --bg: #0f1117;
-  --bg-card: #1a1d27;
-  --bg-card2: #1e2130;
-  --bg-subtle: #1e2130;
-  --text: #f1f5f9;
-  --text-muted: #8892a4;
-  --border: #2a2f3d;
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --primary-light: #818cf8;
-  --secondary: #ec4899;
-  --brand: #6366f1;
-  --brand-hover: #818cf8;
-  --brand-soft: rgba(99,102,241,0.1);
-  --sidebar-bg: #13151f;
+  --bg: #1a1a1a;
+  --bg-card: #242424;
+  --bg-card2: #2a2a2a;
+  --bg-subtle: #2a2a2a;
+  --text: #e0e0e0;
+  --text-muted: #888888;
+  --border: #333333;
+  --primary: #5555cc;
+  --primary-dark: #4444bb;
+  --primary-light: #6666dd;
+  --secondary: #cc5588;
+  --brand: #5555cc;
+  --brand-hover: #6666dd;
+  --brand-soft: rgba(85,85,204,0.1);
+  --sidebar-bg: #1f1f1f;
 }
 
-/* Светлая тема */
 .theme-light {
-  --bg: #f1f5f9;
+  --bg: #f5f5f5;
   --bg-card: #ffffff;
-  --bg-card2: #f8fafc;
-  --bg-subtle: #f0f4f8;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --primary: #4f46e5;
-  --primary-dark: #3730a3;
-  --primary-light: #6366f1;
-  --secondary: #ec4899;
-  --brand: #4f46e5;
-  --brand-hover: #6366f1;
-  --brand-soft: rgba(79,70,229,0.08);
+  --bg-card2: #fafafa;
+  --bg-subtle: #f0f0f0;
+  --text: #222222;
+  --text-muted: #666666;
+  --border: #dddddd;
+  --primary: #5555cc;
+  --primary-dark: #4444bb;
+  --primary-light: #6666dd;
+  --secondary: #cc5588;
+  --brand: #5555cc;
+  --brand-hover: #6666dd;
+  --brand-soft: rgba(85,85,204,0.08);
   --sidebar-bg: #ffffff;
 }
 
