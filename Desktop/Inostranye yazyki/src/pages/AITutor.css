@@ -379,3 +379,11 @@
 .ai-test-btn:hover {
   background: var(--brand-hover);
 }
+
+.ai-dict-btn {
+  background: var(--success, #22aa66);
+}
+
+.ai-dict-btn:hover {
+  background: #1a8f55;
+}

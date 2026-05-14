@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain, Send, RefreshCw, Lightbulb, BookOpen, Zap, Target, ArrowRight, Trash2 } from 'lucide-react';
+import { Brain, Send, RefreshCw, Lightbulb, BookOpen, Zap, Target, ArrowRight, Trash2, Plus } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { getAIRecommendations, generateAITip, getAdaptiveNextLevel, generateExercises } from '../services/aiService';
 import { LANGUAGE_NAMES } from '../data/sampleData';
+import { v4 as uuidv4 } from 'uuid';
 import './AITutor.css';
 
 interface Message {
@@ -12,6 +13,8 @@ interface Message {
   text: string;
   timestamp: Date;
   testPath?: string;
+  dictWords?: { term: string; translation: string }[];
+  dictTopic?: string;
 }
 
 const QUICK_QUESTIONS = [
@@ -27,7 +30,7 @@ const AI_CHAT_URL = '/api/ai-chat';
 
 const AITutor: React.FC = () => {
   const navigate = useNavigate();
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const { user, flashcards, dictionaries, currentLanguage } = state;
 
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -92,7 +95,8 @@ const AITutor: React.FC = () => {
    - [TEST:/games/speed] — скоростной раунд
    - [TEST:/games/matching] — игра на соответствие
    - [TEST:/flashcards] — карточки для повторения
-   - [TEST:/games] — раздел с играми`;
+   - [TEST:/games] — раздел с играми
+10. Если пользователь просит составить словарь — дай список слов в формате "слово — перевод" (по одной паре на строку) и добавь маркер [DICT:Название темы]`;
 
 
 
@@ -141,8 +145,21 @@ const AITutor: React.FC = () => {
         'Не удалось получить ответ. Попробуйте ещё раз.';
       const testMatch = rawText.match(/\[TEST:([^\]]+)\]/);
       const testPath = testMatch ? testMatch[1] : undefined;
+      const dictMatch = rawText.match(/\[DICT:([^\]]+)\]/);
+      const dictTopic = dictMatch ? dictMatch[1] : undefined;
+      const dictWords: { term: string; translation: string }[] = [];
+      if (dictTopic) {
+        const lines = rawText.split('\n');
+        for (const line of lines) {
+          const m = line.match(/^([\w\s]+)[\s]*[—\-–][\s]*(.+)$/);
+          if (m) {
+            dictWords.push({ term: m[1].trim(), translation: m[2].trim() });
+          }
+        }
+      }
       const aiText = rawText
         .replace(/\[TEST:[^\]]+\]/g, '')
+        .replace(/\[DICT:[^\]]+\]/g, '')
         .replace(/\*\*(.+?)\*\*/g, '$1')
         .replace(/\*(.+?)\*/g, '$1')
         .replace(/^[\s]*[-–—]{2,}[\s]*$/gm, '')
@@ -154,6 +171,8 @@ const AITutor: React.FC = () => {
         text: aiText,
         timestamp: new Date(),
         testPath,
+        dictWords: dictWords.length > 0 ? dictWords : undefined,
+        dictTopic,
       }]);
     } catch (err) {
       setMessages(prev => [...prev, {
@@ -185,6 +204,33 @@ const AITutor: React.FC = () => {
       text: `Привет, ${user?.name || 'студент'}! Я ваш персональный тьютор.`,
       timestamp: new Date(),
     }]);
+  };
+
+  const createDictionaryFromAI = (words: { term: string; translation: string }[], topic: string) => {
+    const newDict = {
+      id: uuidv4(),
+      name: topic,
+      description: `Словарь на тему "${topic}" — создано AI`,
+      language: currentLanguage,
+      level: 'beginner',
+      category: 'topic',
+      words: words.map((w, i) => ({
+        id: uuidv4(),
+        term: w.term,
+        translation: w.translation,
+        definition: '',
+        examples: [],
+        language: currentLanguage,
+        difficulty: 1,
+        tags: [topic.toLowerCase()],
+        audioUrl: '',
+      })),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isDefault: false,
+      flashcardCount: words.length,
+    };
+    dispatch({ type: 'ADD_DICTIONARY', payload: newDict as any });
   };
 
   return (
@@ -221,7 +267,19 @@ const AITutor: React.FC = () => {
                       className="ai-test-btn"
                       onClick={() => navigate(msg.testPath!)}
                     >
-                      Пройти тест <ArrowRight size={14} />
+                      {msg.testPath === '/games/speed' ? 'Скоростной раунд' :
+                       msg.testPath === '/games/matching' ? 'Игра на соответствие' :
+                       msg.testPath === '/flashcards' ? 'Карточки' :
+                       msg.testPath === '/games' ? 'К играм' : 'Перейти'}
+                      <ArrowRight size={14} />
+                    </button>
+                  )}
+                  {msg.role === 'ai' && msg.dictWords && msg.dictTopic && (
+                    <button
+                      className="ai-test-btn ai-dict-btn"
+                      onClick={() => createDictionaryFromAI(msg.dictWords!, msg.dictTopic!)}
+                    >
+                      <Plus size={14} /> Добавить "{msg.dictTopic}" ({msg.dictWords.length} слов)
                     </button>
                   )}
                   <div className="msg-time">
