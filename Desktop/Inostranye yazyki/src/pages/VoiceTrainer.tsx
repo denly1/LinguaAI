@@ -21,27 +21,20 @@ const SAMPLE_WORDS: Record<string, PracticeWord[]> = {
     { term: 'Experience', phonetic: '/ɪkˈspɪəriəns/', translation: 'Опыт', language: 'en' },
     { term: 'Pronunciation', phonetic: '/prəˌnʌnsiˈeɪʃən/', translation: 'Произношение', language: 'en' },
   ],
-  de: [
-    { term: 'Guten Morgen', phonetic: '/ˈɡuːtən ˈmɔrɡən/', translation: 'Доброе утро', language: 'de' },
-    { term: 'Danke schön', phonetic: '/ˈdaŋkə ʃøːn/', translation: 'Большое спасибо', language: 'de' },
-    { term: 'Entschuldigung', phonetic: '/ɛntˈʃʊldɪɡʊŋ/', translation: 'Извините', language: 'de' },
-    { term: 'Ausgezeichnet', phonetic: '/ˌaʊsɡəˈtsaɪçnət/', translation: 'Отлично', language: 'de' },
-  ],
   fr: [
     { term: 'Bonjour', phonetic: '/bɔ̃ˈʒuʁ/', translation: 'Добрый день', language: 'fr' },
     { term: 'Merci beaucoup', phonetic: '/mɛʁsi boˈku/', translation: 'Большое спасибо', language: 'fr' },
     { term: 'Je ne comprends pas', phonetic: '/ʒə nə kɔ̃ˈpʁɑ̃ pa/', translation: 'Я не понимаю', language: 'fr' },
   ],
-  es: [
-    { term: 'Buenos días', phonetic: '/ˈbwenos ˈdias/', translation: 'Доброе утро', language: 'es' },
-    { term: 'Muchas gracias', phonetic: '/ˈmutʃas ˈɡɾasjas/', translation: 'Большое спасибо', language: 'es' },
-    { term: 'Lo siento', phonetic: '/lo ˈsjento/', translation: 'Извините', language: 'es' },
+  zh: [
+    { term: 'Nǐ hǎo', phonetic: '/niː haʊ/', translation: 'Привет', language: 'zh' },
+    { term: 'Xièxiè', phonetic: '/ʃjeː ʃjeː/', translation: 'Спасибо', language: 'zh' },
+    { term: 'Zàijiàn', phonetic: '/t͡saɪ t͡ʃjɛn/', translation: 'До свидания', language: 'zh' },
   ],
 };
 
 const LANG_CODES: Record<string, string> = {
-  en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES',
-  it: 'it-IT', zh: 'zh-CN', ja: 'ja-JP', pt: 'pt-BR',
+  en: 'en-US', fr: 'fr-FR', zh: 'zh-CN',
 };
 
 function similarity(a: string, b: string): number {

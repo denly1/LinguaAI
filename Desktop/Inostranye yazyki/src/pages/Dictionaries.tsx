@@ -191,7 +191,7 @@ const Dictionaries: React.FC = () => {
                   <h2>{selectedDict.name}</h2>
                   <p>{selectedDict.description}</p>
                   <div className="detail-tags">
-                    {selectedDict.tags.map(t => <span key={t} className="tag"><Tag size={10} /> {t}</span>)}
+                    {(selectedDict.tags || []).map(t => <span key={t} className="tag"><Tag size={10} /> {t}</span>)}
                   </div>
                 </div>
                 <div className="detail-actions">

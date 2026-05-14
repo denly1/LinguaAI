@@ -36,23 +36,25 @@ const ERROR_TYPE_COLORS: Record<string, string> = {
   translation: '#3b82f6',
 };
 
-function buildErrorsFromDictionaries(dictionaries: any[]): ErrorEntry[] {
+function buildErrorsFromFlashcards(flashcards: any[]): ErrorEntry[] {
   const errors: ErrorEntry[] = [];
-  dictionaries.forEach(dict => {
-    dict.words.forEach((word: any) => {
-      if (word.sm2 && word.sm2.easeFactor < 2.0) {
-        errors.push({
-          id: word.id,
-          word: word.term,
-          translation: word.translation,
-          language: dict.language,
-          errorType: word.sm2.easeFactor < 1.4 ? 'vocabulary' : 'translation',
-          count: Math.max(1, Math.round((2.5 - word.sm2.easeFactor) * 5)),
-          lastSeen: word.sm2.nextReview || new Date().toISOString(),
-          difficulty: Math.round((2.5 - word.sm2.easeFactor) * 40),
-        });
-      }
-    });
+  flashcards.forEach((card: any) => {
+    const total = card.reviewCount || 0;
+    const incorrect = card.incorrectCount || 0;
+    const ease = card.easeFactor ?? 2.5;
+    if (total > 0 && (incorrect > 0 || ease < 2.0)) {
+      const errCount = Math.max(1, incorrect + Math.round((2.5 - ease) * 2));
+      errors.push({
+        id: card.wordId || card.id,
+        word: card.word?.term || '—',
+        translation: card.word?.translation || '',
+        language: card.word?.language || 'en',
+        errorType: ease < 1.4 ? 'vocabulary' : incorrect > (card.correctCount || 0) ? 'translation' : 'spelling',
+        count: errCount,
+        lastSeen: card.nextReviewDate || new Date().toISOString(),
+        difficulty: Math.min(100, Math.round((incorrect / Math.max(1, total)) * 100)),
+      });
+    }
   });
   return errors.sort((a, b) => b.count - a.count).slice(0, 30);
 }
@@ -97,7 +99,7 @@ const ErrorAnalysis: React.FC = () => {
   const [aiTips, setAiTips] = useState<string[]>([]);
   const [filter, setFilter] = useState<'all' | string>('all');
 
-  const errors = buildErrorsFromDictionaries(state.dictionaries);
+  const errors = buildErrorsFromFlashcards(state.flashcards);
   const weakTopics = buildWeakTopics(errors);
 
   const totalErrors = errors.reduce((s, e) => s + e.count, 0);

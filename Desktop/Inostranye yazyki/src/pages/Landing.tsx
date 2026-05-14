@@ -102,7 +102,7 @@ const Landing: React.FC = () => {
 
   const goToAuth = () => navigate('/auth');
   const features = [
-    { icon: '🃏', title: 'Флеш-карточки', desc: 'Алгоритм интервального повторения SM-2 автоматически планирует повторение каждого слова в нужный момент.', color: 'rgba(99,102,241,0.12)' },
+    { icon: '🃏', title: 'Флеш-карточки', desc: 'Адаптивное интервальное повторение автоматически планирует повторение каждого слова в нужный момент.', color: 'rgba(99,102,241,0.12)' },
     { icon: '🎮', title: 'Игровые упражнения', desc: 'Сопоставление слов, режим Speed Round и другие игры делают обучение интересным и эффективным.', color: 'rgba(245,158,11,0.12)' },
     { icon: '📚', title: 'Личные словари', desc: 'Создавайте тематические словари, добавляйте слова с транскрипцией, примерами и тегами.', color: 'rgba(16,185,129,0.12)' },
     { icon: '💬', title: 'Тьютор', desc: 'Персональный помощник отвечает на вопросы о языке, объясняет правила и даёт советы.', color: 'rgba(59,130,246,0.12)' },
@@ -119,13 +119,8 @@ const Landing: React.FC = () => {
 
   const langs = [
     { flag: '🇬🇧', name: 'Английский' },
-    { flag: '🇩🇪', name: 'Немецкий' },
-    { flag: '🇫🇷', name: 'Французский' },
-    { flag: '🇪🇸', name: 'Испанский' },
-    { flag: '🇮🇹', name: 'Итальянский' },
-    { flag: '🇨🇳', name: 'Китайский' },
-    { flag: '🇯🇵', name: 'Японский' },
-    { flag: '🇵🇹', name: 'Португальский' },
+    { flag: '🇷', name: 'Французский' },
+    { flag: '🇳', name: 'Китайский' },
   ];
 
   return (
@@ -174,7 +169,7 @@ const Landing: React.FC = () => {
             </div>
             <div className="landing-hero-trust">
               <div className="landing-hero-trust-item"><Check size={13} color="#10b981" /> Без оплаты для старта</div>
-              <div className="landing-hero-trust-item"><Check size={13} color="#10b981" /> 8 языков</div>
+              <div className="landing-hero-trust-item"><Check size={13} color="#10b981" /> 3 языка</div>
               <div className="landing-hero-trust-item"><Check size={13} color="#10b981" /> Работает в браузере</div>
             </div>
           </div>
@@ -229,8 +224,8 @@ const Landing: React.FC = () => {
           </div>
           <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
           <div className="social-proof-item">
-            <div className="social-proof-num">8</div>
-            <div>языков доступно</div>
+            <div className="social-proof-num">3</div>
+            <div>языка доступно</div>
           </div>
           <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
           <div className="social-proof-item">
@@ -239,8 +234,8 @@ const Landing: React.FC = () => {
           </div>
           <div style={{ width: 1, height: 28, background: 'var(--border)' }} />
           <div className="social-proof-item">
-            <div className="social-proof-num">SM-2</div>
-            <div>алгоритм повторения</div>
+            <div className="social-proof-num">AI</div>
+            <div>адаптивное обучение</div>
           </div>
         </div>
       </div>
@@ -392,7 +387,7 @@ const Landing: React.FC = () => {
               <ul className="pricing-features">
                 {[
                   [true, '500+ слов и 20 уроков'],
-                  [true, 'Флеш-карточки (SM-2)'],
+                  [true, 'Флеш-карточки с повторением'],
                   [true, 'Личные словари'],
                   [true, 'Базовые тесты'],
                   [true, 'Игры и упражнения'],
@@ -422,7 +417,7 @@ const Landing: React.FC = () => {
               <ul className="pricing-features">
                 {[
                   [true, '2500+ слов и 70+ уроков'],
-                  [true, 'Флеш-карточки (SM-2)'],
+                  [true, 'Флеш-карточки с повторением'],
                   [true, 'Личные словари'],
                   [true, 'Расширенные тесты'],
                   [true, 'Все игры и упражнения'],

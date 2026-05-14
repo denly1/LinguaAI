@@ -16,13 +16,8 @@ type Tab = 'courses' | 'tests' | 'games' | 'purchases';
 
 const LANG_OPTIONS: { value: LanguageCode; label: string }[] = [
   { value: 'en', label: '🇬🇧 Английский' },
-  { value: 'de', label: '🇩🇪 Немецкий' },
   { value: 'fr', label: '🇫🇷 Французский' },
-  { value: 'es', label: '🇪🇸 Испанский' },
-  { value: 'it', label: '🇮🇹 Итальянский' },
   { value: 'zh', label: '🇨🇳 Китайский' },
-  { value: 'ja', label: '🇯🇵 Японский' },
-  { value: 'pt', label: '🇧🇷 Португальский' },
 ];
 
 const LEVEL_OPTIONS: { value: DifficultyLevel; label: string }[] = [

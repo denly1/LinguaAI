@@ -2,24 +2,14 @@ import { Word, Dictionary, User, Flashcard, LanguageCode } from '../types';
 
 export const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   en: 'Английский',
-  de: 'Немецкий',
   fr: 'Французский',
-  es: 'Испанский',
-  it: 'Итальянский',
   zh: 'Китайский',
-  ja: 'Японский',
-  pt: 'Португальский',
 };
 
 export const LANGUAGE_FLAGS: Record<LanguageCode, string> = {
   en: '🇬🇧',
-  de: '🇩🇪',
   fr: '🇫🇷',
-  es: '🇪🇸',
-  it: '🇮🇹',
   zh: '🇨🇳',
-  ja: '🇯🇵',
-  pt: '🇧🇷',
 };
 
 const wordsEn: Word[] = [
@@ -50,27 +40,6 @@ const wordsEn: Word[] = [
   { id: 'en25', term: 'read',         translation: 'читать',              language: 'en', nativeLanguage: 'en', phonetic: '/riːd/',           partOfSpeech: 'verb',         examples: ['I like to read books.'],           tags: ['education'], difficulty: 'beginner', frequency: 93 },
 ];
 
-const wordsDe: Word[] = [
-  { id: 'de1',  term: 'hallo',         translation: 'привет',           language: 'de', nativeLanguage: 'de', phonetic: '/ˈhalo/',       partOfSpeech: 'interjection', examples: ['Hallo, wie geht es dir?'],     tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'de2',  term: 'danke',         translation: 'спасибо',          language: 'de', nativeLanguage: 'de', phonetic: '/ˈdaŋkə/',      partOfSpeech: 'interjection', examples: ['Danke sehr!'],                 tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'de3',  term: 'bitte',         translation: 'пожалуйста',       language: 'de', nativeLanguage: 'de', phonetic: '/ˈbɪtə/',       partOfSpeech: 'adverb',       examples: ['Bitte hilf mir.'],             tags: ['basic'],     difficulty: 'beginner', frequency: 99 },
-  { id: 'de4',  term: 'das Haus',      translation: 'дом',              language: 'de', nativeLanguage: 'de', phonetic: '/das haʊs/',    partOfSpeech: 'noun',         examples: ['Das Haus ist groß.'],          tags: ['everyday'],  difficulty: 'beginner', frequency: 95 },
-  { id: 'de5',  term: 'das Wasser',    translation: 'вода',             language: 'de', nativeLanguage: 'de', phonetic: '/das ˈvasər/',  partOfSpeech: 'noun',         examples: ['Ich möchte Wasser, bitte.'],   tags: ['everyday'],  difficulty: 'beginner', frequency: 96 },
-  { id: 'de6',  term: 'guten Morgen',  translation: 'доброе утро',      language: 'de', nativeLanguage: 'de', phonetic: '/ˈɡuːtn̩ ˈmɔrɡn̩/', partOfSpeech: 'phrase',   examples: ['Guten Morgen!'],               tags: ['greetings'], difficulty: 'beginner', frequency: 94 },
-  { id: 'de7',  term: 'die Arbeit',    translation: 'работа',           language: 'de', nativeLanguage: 'de', phonetic: '/di ˈarbaɪt/',  partOfSpeech: 'noun',         examples: ['Die Arbeit macht Spaß.'],      tags: ['everyday'],  difficulty: 'beginner', frequency: 93 },
-  { id: 'de8',  term: 'ja',            translation: 'да',               language: 'de', nativeLanguage: 'de', phonetic: '/jaː/',         partOfSpeech: 'adverb',       examples: ['Ja, natürlich!'],              tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'de9',  term: 'nein',          translation: 'нет',              language: 'de', nativeLanguage: 'de', phonetic: '/naɪn/',        partOfSpeech: 'adverb',       examples: ['Nein, danke.'],                tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'de10', term: 'die Familie',   translation: 'семья',            language: 'de', nativeLanguage: 'de', phonetic: '/di faˈmiːliə/',partOfSpeech: 'noun',         examples: ['Meine Familie ist groß.'],     tags: ['people'],    difficulty: 'beginner', frequency: 91 },
-  { id: 'de11', term: 'der Freund',    translation: 'друг',             language: 'de', nativeLanguage: 'de', phonetic: '/deɐ fʁɔɪnt/',  partOfSpeech: 'noun',         examples: ['Er ist mein Freund.'],         tags: ['people'],    difficulty: 'beginner', frequency: 90 },
-  { id: 'de12', term: 'essen',         translation: 'есть / кушать',    language: 'de', nativeLanguage: 'de', phonetic: '/ˈɛsn̩/',       partOfSpeech: 'verb',         examples: ['Ich esse gerne Pizza.'],       tags: ['everyday'],  difficulty: 'beginner', frequency: 94 },
-  { id: 'de13', term: 'trinken',       translation: 'пить',             language: 'de', nativeLanguage: 'de', phonetic: '/ˈtʁɪŋkn̩/',    partOfSpeech: 'verb',         examples: ['Ich trinke Kaffee.'],          tags: ['everyday'],  difficulty: 'beginner', frequency: 93 },
-  { id: 'de14', term: 'die Schule',    translation: 'школа',            language: 'de', nativeLanguage: 'de', phonetic: '/di ˈʃuːlə/',   partOfSpeech: 'noun',         examples: ['Die Schule beginnt um 8 Uhr.'],tags: ['education'], difficulty: 'beginner', frequency: 89 },
-  { id: 'de15', term: 'gut',           translation: 'хорошо / хороший', language: 'de', nativeLanguage: 'de', phonetic: '/ɡuːt/',        partOfSpeech: 'adjective',    examples: ['Das ist gut!'],                tags: ['basic'],     difficulty: 'beginner', frequency: 97 },
-  { id: 'de16', term: 'wie viel',      translation: 'сколько',          language: 'de', nativeLanguage: 'de', phonetic: '/viː fiːl/',    partOfSpeech: 'phrase',       examples: ['Wie viel kostet das?'],        tags: ['everyday'],  difficulty: 'beginner', frequency: 88 },
-  { id: 'de17', term: 'ich liebe dich',translation: 'я тебя люблю',     language: 'de', nativeLanguage: 'de', phonetic: '/ɪç ˈliːbə dɪç/',partOfSpeech: 'phrase',      examples: ['Ich liebe dich sehr.'],        tags: ['feelings'],  difficulty: 'beginner', frequency: 87 },
-  { id: 'de18', term: 'entschuldigung',translation: 'извините',         language: 'de', nativeLanguage: 'de', phonetic: '/ɛntˈʃʊldɪɡʊŋ/',partOfSpeech: 'interjection', examples: ['Entschuldigung, wo ist die Bahn?'], tags: ['basic'], difficulty: 'beginner', frequency: 90 },
-];
-
 const wordsFr: Word[] = [
   { id: 'fr1',  term: 'bonjour',         translation: 'здравствуйте',    language: 'fr', nativeLanguage: 'fr', phonetic: '/bɔ̃ʒuʁ/',    partOfSpeech: 'interjection', examples: ['Bonjour! Comment allez-vous?'], tags: ['greetings'], difficulty: 'beginner', frequency: 100 },
   { id: 'fr2',  term: 'merci',           translation: 'спасибо',         language: 'fr', nativeLanguage: 'fr', phonetic: '/mɛʁsi/',      partOfSpeech: 'interjection', examples: ['Merci beaucoup!'],              tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
@@ -89,60 +58,6 @@ const wordsFr: Word[] = [
   { id: 'fr15', term: 'le café',         translation: 'кофе / кафе',     language: 'fr', nativeLanguage: 'fr', phonetic: '/lə kafe/',     partOfSpeech: 'noun',         examples: ['Un café, s\'il vous plaît.'],   tags: ['food'],      difficulty: 'beginner', frequency: 86 },
 ];
 
-const wordsEs: Word[] = [
-  { id: 'es1',  term: 'hola',          translation: 'привет',           language: 'es', nativeLanguage: 'es', phonetic: '/ˈola/',        partOfSpeech: 'interjection', examples: ['Hola, ¿cómo estás?'],          tags: ['greetings'], difficulty: 'beginner', frequency: 100 },
-  { id: 'es2',  term: 'gracias',       translation: 'спасибо',          language: 'es', nativeLanguage: 'es', phonetic: '/ˈɡrasjas/',    partOfSpeech: 'interjection', examples: ['Muchas gracias!'],              tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'es3',  term: 'sí',            translation: 'да',               language: 'es', nativeLanguage: 'es', phonetic: '/si/',           partOfSpeech: 'adverb',       examples: ['Sí, entiendo.'],               tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'es4',  term: 'no',            translation: 'нет',              language: 'es', nativeLanguage: 'es', phonetic: '/no/',           partOfSpeech: 'adverb',       examples: ['No, gracias.'],                tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'es5',  term: 'el agua',       translation: 'вода',             language: 'es', nativeLanguage: 'es', phonetic: '/el ˈaɣwa/',    partOfSpeech: 'noun',         examples: ['Necesito agua, por favor.'],   tags: ['everyday'],  difficulty: 'beginner', frequency: 96 },
-  { id: 'es6',  term: 'la casa',       translation: 'дом',              language: 'es', nativeLanguage: 'es', phonetic: '/la ˈkasa/',    partOfSpeech: 'noun',         examples: ['Mi casa es tu casa.'],         tags: ['everyday'],  difficulty: 'beginner', frequency: 95 },
-  { id: 'es7',  term: 'por favor',     translation: 'пожалуйста',       language: 'es', nativeLanguage: 'es', phonetic: '/por faˈβor/',  partOfSpeech: 'phrase',       examples: ['Ayúdame, por favor.'],         tags: ['basic'],     difficulty: 'beginner', frequency: 98 },
-  { id: 'es8',  term: 'buenos días',   translation: 'доброе утро',      language: 'es', nativeLanguage: 'es', phonetic: '/ˈbwenos ˈdias/',partOfSpeech: 'phrase',      examples: ['Buenos días, ¿cómo amaneció?'],tags: ['greetings'], difficulty: 'beginner', frequency: 94 },
-  { id: 'es9',  term: 'la comida',     translation: 'еда',              language: 'es', nativeLanguage: 'es', phonetic: '/la koˈmiða/',  partOfSpeech: 'noun',         examples: ['La comida está deliciosa.'],   tags: ['food'],      difficulty: 'beginner', frequency: 91 },
-  { id: 'es10', term: 'me llamo',      translation: 'меня зовут',       language: 'es', nativeLanguage: 'es', phonetic: '/me ˈʎamo/',    partOfSpeech: 'phrase',       examples: ['Me llamo Carlos.'],            tags: ['people'],    difficulty: 'beginner', frequency: 93 },
-  { id: 'es11', term: 'la familia',    translation: 'семья',            language: 'es', nativeLanguage: 'es', phonetic: '/la faˈmilia/', partOfSpeech: 'noun',         examples: ['Mi familia es muy unida.'],    tags: ['people'],    difficulty: 'beginner', frequency: 90 },
-  { id: 'es12', term: 'te quiero',     translation: 'я тебя люблю',     language: 'es', nativeLanguage: 'es', phonetic: '/te ˈkjeɾo/',   partOfSpeech: 'phrase',       examples: ['Te quiero mucho.'],            tags: ['feelings'],  difficulty: 'beginner', frequency: 89 },
-  { id: 'es13', term: 'el tiempo',     translation: 'время / погода',   language: 'es', nativeLanguage: 'es', phonetic: '/el ˈtjempo/',  partOfSpeech: 'noun',         examples: ['¿Qué tiempo hace hoy?'],       tags: ['everyday'],  difficulty: 'beginner', frequency: 88 },
-  { id: 'es14', term: 'trabajar',      translation: 'работать',         language: 'es', nativeLanguage: 'es', phonetic: '/tɾaβaˈxar/',  partOfSpeech: 'verb',         examples: ['Tengo que trabajar mañana.'],  tags: ['everyday'],  difficulty: 'beginner', frequency: 87 },
-  { id: 'es15', term: 'hablar',        translation: 'говорить',         language: 'es', nativeLanguage: 'es', phonetic: '/aˈblar/',      partOfSpeech: 'verb',         examples: ['Puedo hablar español.'],       tags: ['basic'],     difficulty: 'beginner', frequency: 92 },
-];
-
-const wordsIt: Word[] = [
-  { id: 'it1',  term: 'ciao',          translation: 'привет / пока',    language: 'it', nativeLanguage: 'it', phonetic: '/tʃao/',        partOfSpeech: 'interjection', examples: ['Ciao! Come stai?'],            tags: ['greetings'], difficulty: 'beginner', frequency: 100 },
-  { id: 'it2',  term: 'grazie',        translation: 'спасибо',          language: 'it', nativeLanguage: 'it', phonetic: '/ˈɡrattsje/',   partOfSpeech: 'interjection', examples: ['Grazie mille!'],               tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'it3',  term: 'prego',         translation: 'пожалуйста',       language: 'it', nativeLanguage: 'it', phonetic: '/ˈpɾɛɡo/',      partOfSpeech: 'interjection', examples: ['Prego, si accomodi.'],         tags: ['basic'],     difficulty: 'beginner', frequency: 98 },
-  { id: 'it4',  term: 'sì',            translation: 'да',               language: 'it', nativeLanguage: 'it', phonetic: '/si/',           partOfSpeech: 'adverb',       examples: ['Sì, capisco.'],                tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'it5',  term: 'no',            translation: 'нет',              language: 'it', nativeLanguage: 'it', phonetic: '/nɔ/',           partOfSpeech: 'adverb',       examples: ['No, grazie.'],                 tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'it6',  term: "buon giorno",   translation: 'добрый день',      language: 'it', nativeLanguage: 'it', phonetic: '/ˌbwɔnˈdʒorno/', partOfSpeech: 'phrase',      examples: ['Buon giorno, signora!'],       tags: ['greetings'], difficulty: 'beginner', frequency: 95 },
-  { id: 'it7',  term: "l'acqua",       translation: 'вода',             language: 'it', nativeLanguage: 'it', phonetic: '/ˈlakkwa/',      partOfSpeech: 'noun',         examples: ["Vorrei dell'acqua."],          tags: ['everyday'],  difficulty: 'beginner', frequency: 94 },
-  { id: 'it8',  term: 'la casa',       translation: 'дом',              language: 'it', nativeLanguage: 'it', phonetic: '/la ˈkaza/',     partOfSpeech: 'noun',         examples: ['La mia casa è bella.'],        tags: ['everyday'],  difficulty: 'beginner', frequency: 93 },
-  { id: 'it9',  term: 'ti amo',        translation: 'я тебя люблю',     language: 'it', nativeLanguage: 'it', phonetic: '/ti ˈamo/',      partOfSpeech: 'phrase',       examples: ['Ti amo con tutto il cuore.'],  tags: ['feelings'],  difficulty: 'beginner', frequency: 91 },
-  { id: 'it10', term: 'mi chiamo',     translation: 'меня зовут',       language: 'it', nativeLanguage: 'it', phonetic: '/mi ˈkjamo/',    partOfSpeech: 'phrase',       examples: ['Mi chiamo Marco.'],            tags: ['people'],    difficulty: 'beginner', frequency: 92 },
-  { id: 'it11', term: 'la famiglia',   translation: 'семья',            language: 'it', nativeLanguage: 'it', phonetic: '/la faˈmiʎʎa/', partOfSpeech: 'noun',         examples: ['La mia famiglia è grande.'],   tags: ['people'],    difficulty: 'beginner', frequency: 90 },
-  { id: 'it12', term: 'mangiare',      translation: 'есть / кушать',    language: 'it', nativeLanguage: 'it', phonetic: '/manˈdʒare/',    partOfSpeech: 'verb',         examples: ['Mi piace mangiare la pizza.'], tags: ['everyday'], difficulty: 'beginner', frequency: 93 },
-  { id: 'it13', term: 'bello',         translation: 'красивый',         language: 'it', nativeLanguage: 'it', phonetic: '/ˈbɛllo/',       partOfSpeech: 'adjective',    examples: ['Che bello!'],                  tags: ['basic'],     difficulty: 'beginner', frequency: 89 },
-  { id: 'it14', term: 'scusi',         translation: 'извините',         language: 'it', nativeLanguage: 'it', phonetic: '/ˈskuzi/',       partOfSpeech: 'interjection', examples: ['Scusi, dov\'è la stazione?'],  tags: ['basic'],     difficulty: 'beginner', frequency: 88 },
-  { id: 'it15', term: 'buona notte',   translation: 'спокойной ночи',   language: 'it', nativeLanguage: 'it', phonetic: '/ˌbwɔna ˈnɔtte/', partOfSpeech: 'phrase',     examples: ['Buona notte, a domani!'],      tags: ['greetings'], difficulty: 'beginner', frequency: 87 },
-];
-
-const wordsPt: Word[] = [
-  { id: 'pt1',  term: 'olá',           translation: 'привет',           language: 'pt', nativeLanguage: 'pt', phonetic: '/oˈla/',         partOfSpeech: 'interjection', examples: ['Olá! Tudo bem?'],              tags: ['greetings'], difficulty: 'beginner', frequency: 100 },
-  { id: 'pt2',  term: 'obrigado',      translation: 'спасибо (м.р.)',   language: 'pt', nativeLanguage: 'pt', phonetic: '/obɾiˈɡadu/',    partOfSpeech: 'interjection', examples: ['Muito obrigado!'],             tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'pt3',  term: 'por favor',     translation: 'пожалуйста',       language: 'pt', nativeLanguage: 'pt', phonetic: '/puɾ faˈvoɾ/',   partOfSpeech: 'phrase',       examples: ['Por favor, me ajude.'],        tags: ['basic'],     difficulty: 'beginner', frequency: 99 },
-  { id: 'pt4',  term: 'sim',           translation: 'да',               language: 'pt', nativeLanguage: 'pt', phonetic: '/sĩ/',            partOfSpeech: 'adverb',       examples: ['Sim, eu entendo.'],            tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'pt5',  term: 'não',           translation: 'нет',              language: 'pt', nativeLanguage: 'pt', phonetic: '/nɐ̃w̃/',          partOfSpeech: 'adverb',       examples: ['Não, obrigado.'],              tags: ['basic'],     difficulty: 'beginner', frequency: 100 },
-  { id: 'pt6',  term: 'bom dia',       translation: 'доброе утро',      language: 'pt', nativeLanguage: 'pt', phonetic: '/bõ ˈdʒia/',     partOfSpeech: 'phrase',       examples: ['Bom dia! Como vai?'],          tags: ['greetings'], difficulty: 'beginner', frequency: 95 },
-  { id: 'pt7',  term: 'a água',        translation: 'вода',             language: 'pt', nativeLanguage: 'pt', phonetic: '/a ˈaɡwɐ/',      partOfSpeech: 'noun',         examples: ['Eu preciso de água.'],         tags: ['everyday'],  difficulty: 'beginner', frequency: 94 },
-  { id: 'pt8',  term: 'a casa',        translation: 'дом',              language: 'pt', nativeLanguage: 'pt', phonetic: '/a ˈkazɐ/',      partOfSpeech: 'noun',         examples: ['A minha casa é bonita.'],      tags: ['everyday'],  difficulty: 'beginner', frequency: 93 },
-  { id: 'pt9',  term: 'eu te amo',     translation: 'я тебя люблю',     language: 'pt', nativeLanguage: 'pt', phonetic: '/ew tʃi ˈamu/',  partOfSpeech: 'phrase',       examples: ['Eu te amo muito.'],            tags: ['feelings'],  difficulty: 'beginner', frequency: 91 },
-  { id: 'pt10', term: 'me chamo',      translation: 'меня зовут',       language: 'pt', nativeLanguage: 'pt', phonetic: '/mi ˈʃamu/',     partOfSpeech: 'phrase',       examples: ['Me chamo João.'],              tags: ['people'],    difficulty: 'beginner', frequency: 92 },
-  { id: 'pt11', term: 'a família',     translation: 'семья',            language: 'pt', nativeLanguage: 'pt', phonetic: '/a fɐˈmiliɐ/',   partOfSpeech: 'noun',         examples: ['A minha família é grande.'],   tags: ['people'],    difficulty: 'beginner', frequency: 90 },
-  { id: 'pt12', term: 'comer',         translation: 'есть / кушать',    language: 'pt', nativeLanguage: 'pt', phonetic: '/koˈmeɾ/',        partOfSpeech: 'verb',         examples: ['Eu gosto de comer pizza.'],    tags: ['everyday'],  difficulty: 'beginner', frequency: 93 },
-  { id: 'pt13', term: 'bonito',        translation: 'красивый',         language: 'pt', nativeLanguage: 'pt', phonetic: '/boˈnitu/',       partOfSpeech: 'adjective',    examples: ['Que dia bonito!'],             tags: ['basic'],     difficulty: 'beginner', frequency: 89 },
-  { id: 'pt14', term: 'desculpe',      translation: 'извините',         language: 'pt', nativeLanguage: 'pt', phonetic: '/dɨʃˈkulpɨ/',    partOfSpeech: 'interjection', examples: ['Desculpe, onde é a estação?'], tags: ['basic'],    difficulty: 'beginner', frequency: 88 },
-  { id: 'pt15', term: 'boa noite',     translation: 'спокойной ночи',   language: 'pt', nativeLanguage: 'pt', phonetic: '/ˈboɐ ˈnoitɨ/', partOfSpeech: 'phrase',       examples: ['Boa noite, durma bem!'],       tags: ['greetings'], difficulty: 'beginner', frequency: 87 },
-];
-
 export const sampleDictionaries: Dictionary[] = [
   {
     id: 'dict-en-a1',
@@ -159,20 +74,6 @@ export const sampleDictionaries: Dictionary[] = [
     coverColor: '#4a6cf7',
   },
   {
-    id: 'dict-de-a1',
-    name: 'Немецкий — базовые слова',
-    description: 'Первые слова немецкого языка: приветствия и повседневная лексика A1',
-    language: 'de',
-    nativeLanguage: 'de',
-    level: 'beginner',
-    words: wordsDe,
-    isPublic: true,
-    createdBy: 'system',
-    createdAt: '2024-01-01',
-    tags: ['beginner', 'a1', 'basic'],
-    coverColor: '#f59e0b',
-  },
-  {
     id: 'dict-fr-a1',
     name: 'Французский — базовые слова',
     description: 'Первые слова французского языка: приветствия и повседневная лексика A1',
@@ -185,48 +86,6 @@ export const sampleDictionaries: Dictionary[] = [
     createdAt: '2024-01-01',
     tags: ['beginner', 'a1', 'basic'],
     coverColor: '#10b981',
-  },
-  {
-    id: 'dict-es-a1',
-    name: 'Испанский — базовые слова',
-    description: 'Первые слова испанского языка: приветствия и повседневная лексика A1',
-    language: 'es',
-    nativeLanguage: 'es',
-    level: 'beginner',
-    words: wordsEs,
-    isPublic: true,
-    createdBy: 'system',
-    createdAt: '2024-01-01',
-    tags: ['beginner', 'a1', 'basic'],
-    coverColor: '#ef4444',
-  },
-  {
-    id: 'dict-it-a1',
-    name: 'Итальянский — базовые слова',
-    description: 'Первые слова итальянского: приветствия, чувства, бытовая лексика A1',
-    language: 'it',
-    nativeLanguage: 'it',
-    level: 'beginner',
-    words: wordsIt,
-    isPublic: true,
-    createdBy: 'system',
-    createdAt: '2024-01-01',
-    tags: ['beginner', 'a1', 'basic'],
-    coverColor: '#f97316',
-  },
-  {
-    id: 'dict-pt-a1',
-    name: 'Португальский — базовые слова',
-    description: 'Первые слова португальского: приветствия, семья, повседневная лексика A1',
-    language: 'pt',
-    nativeLanguage: 'pt',
-    level: 'beginner',
-    words: wordsPt,
-    isPublic: true,
-    createdBy: 'system',
-    createdAt: '2024-01-01',
-    tags: ['beginner', 'a1', 'basic'],
-    coverColor: '#0ea5e9',
   },
 ];
 

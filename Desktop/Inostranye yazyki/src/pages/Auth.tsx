@@ -70,8 +70,8 @@ const Auth: React.FC = () => {
             <div className="auth-feature-card">
               <div className="auth-feature-icon" style={{ background: 'rgba(16,185,129,0.12)', color: '#34d399' }}><Globe size={18} /></div>
               <div>
-                <div className="auth-feature-title">8 языков мира</div>
-                <div className="auth-feature-desc">Английский, немецкий, французский, испанский и другие</div>
+                <div className="auth-feature-title">3 языка</div>
+                <div className="auth-feature-desc">Английский, французский, китайский</div>
               </div>
             </div>
           </div>

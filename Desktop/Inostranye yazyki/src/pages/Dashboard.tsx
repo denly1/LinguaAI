@@ -73,8 +73,8 @@ const GuestDashboard: React.FC = () => {
         <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Что включено в обучение</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {[
-            { icon: '🇦', title: '8 языков', desc: 'EN, DE, FR, ES, IT, ZH, JA, PT' },
-            { icon: '🎦', title: 'Флеш-карточки', desc: 'Алгоритм интервального повторения SM-2' },
+            { icon: '🇦', title: '3 языка', desc: 'EN, FR, ZH' },
+            { icon: '🎦', title: 'Флеш-карточки', desc: 'Адаптивное интервальное повторение' },
             { icon: '🎮', title: 'Игры', desc: 'Сопоставление слов и Speed Round' },
             { icon: '📚', title: 'Словари', desc: 'Личные тематические словари' },
             { icon: '📊', title: 'Прогресс', desc: 'Статистика и аналитика обучения' },

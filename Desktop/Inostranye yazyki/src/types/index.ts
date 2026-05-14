@@ -1,4 +1,4 @@
-export type LanguageCode = 'en' | 'de' | 'fr' | 'es' | 'it' | 'zh' | 'ja' | 'pt';
+export type LanguageCode = 'en' | 'fr' | 'zh';
 
 export type DifficultyLevel = 'beginner' | 'elementary' | 'intermediate' | 'upper-intermediate' | 'advanced';
 

@@ -131,11 +131,6 @@ export const TIER_CONFIG: Record<CourseTier, {
 
 export const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   en: 'Английский',
-  de: 'Немецкий',
   fr: 'Французский',
-  es: 'Испанский',
-  it: 'Итальянский',
   zh: 'Китайский',
-  ja: 'Японский',
-  pt: 'Португальский',
 };

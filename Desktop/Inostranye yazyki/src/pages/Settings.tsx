@@ -5,7 +5,7 @@ import { LANGUAGE_FLAGS, LANGUAGE_NAMES } from '../data/sampleData';
 import { LanguageCode, DifficultyLevel } from '../types';
 import './Settings.css';
 
-const LANGUAGES: LanguageCode[] = ['en', 'de', 'fr', 'es', 'it', 'zh', 'ja', 'pt'];
+const LANGUAGES: LanguageCode[] = ['en', 'fr', 'zh'];
 
 const Settings: React.FC = () => {
   const { state, dispatch } = useApp();
@@ -214,7 +214,7 @@ const Settings: React.FC = () => {
             <div className="setting-row">
               <div className="setting-label">
                 <div className="setting-name">Интервальное повторение</div>
-                <div className="setting-desc">Алгоритм SM-2 для карточек</div>
+                <div className="setting-desc">Адаптивное повторение карточек</div>
               </div>
               <div className="toggle on">
                 <div className="toggle-thumb" />
@@ -249,32 +249,6 @@ const Settings: React.FC = () => {
           </div>
         </div>
 
-        <div className="settings-section">
-          <div className="section-header">
-            <SettingsIcon size={16} />
-            <h2>О приложении</h2>
-          </div>
-          <div className="settings-card about-card">
-            <div className="about-logo">
-              <div className="about-icon">🧠</div>
-              <div>
-                <div className="about-name">LinguaAI</div>
-                <div className="about-ver">Версия 1.0.0</div>
-              </div>
-            </div>
-            <p className="about-desc">
-              LinguaAI — веб-приложение для изучения иностранных языков с помощью карточек, словарей и адаптивного повторения материала.
-            </p>
-            <div className="about-features">
-              <div className="feat-item"><Check size={12} color="#10b981" /> Алгоритм SM-2 интервального повторения</div>
-              <div className="feat-item"><Check size={12} color="#10b981" /> Раздел чата с персональными советами по языку</div>
-              <div className="feat-item"><Check size={12} color="#10b981" /> Адаптивный подбор уровня сложности</div>
-              <div className="feat-item"><Check size={12} color="#10b981" /> 8 языков: EN, DE, FR, ES, IT, ZH, JA, PT</div>
-              <div className="feat-item"><Check size={12} color="#10b981" /> Отслеживание прогресса и статистика</div>
-              <div className="feat-item"><Check size={12} color="#10b981" /> Система достижений и серий</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
