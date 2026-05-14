@@ -1,0 +1,113 @@
+@startuml
+title Диаграмма прецедентов LinguaAI
+
+' Акторы
+actor Гость as Guest
+actor Ученик as Student
+actor Менеджер as Manager
+actor Администратор as Admin
+actor "ИИ-Система" as AI
+
+' Граница системы
+rectangle "LinguaAI" {
+
+  ' Аутентификация
+  usecase UC1 as "Зарегистрироваться"
+  usecase UC2 as "Войти в систему"
+  usecase UC3 as "Выйти"
+  usecase UC4 as "Редактировать профиль"
+
+  ' Словари
+  usecase UC5 as "Создать словарь"
+  usecase UC6 as "Добавить слово"
+  usecase UC7 as "Удалить слово"
+  usecase UC8 as "Поиск словарей"
+  usecase UC9 as "Экспорт CSV/JSON"
+
+  ' Обучение
+  usecase UC10 as "Просмотр карточек"
+  usecase UC11 as "Режим изучения SM-2"
+  usecase UC12 as "Тест 4 варианта"
+  usecase UC13 as "Сопоставление"
+  usecase UC14 as "Speed Round"
+  usecase UC15 as "TTS озвучка"
+  usecase UC16 as "Горячие клавиши"
+
+  ' ИИ
+  usecase UC17 as "Чат с ИИ"
+  usecase UC18 as "Рекомендации"
+  usecase UC19 as "Совет дня"
+  usecase UC20 as "Адаптивный уровень"
+  usecase UC21 as "Расчёт SM-2"
+
+  ' Прогресс
+  usecase UC22 as "Просмотр прогресса"
+  usecase UC23 as "Получать XP"
+  usecase UC24 as "Серия streak"
+  usecase UC25 as "Достижения"
+  usecase UC26 as "Таблица лидеров"
+  usecase UC27 as "Уведомления"
+
+  ' Настройки
+  usecase UC28 as "Сменить тему"
+  usecase UC29 as "Добавить язык"
+  usecase UC30 as "Глобальный поиск"
+
+  ' Администрирование
+  usecase UC31 as "Список пользователей"
+  usecase UC32 as "Изменить роль"
+  usecase UC33 as "Заблокировать"
+  usecase UC34 as "Удалить пользователя"
+  usecase UC35 as "Статистика системы"
+}
+
+' Связи Гость
+Guest --> UC1
+Guest --> UC2
+
+' Связи Ученик
+Student --> UC10
+Student --> UC11
+Student --> UC12
+Student --> UC13
+Student --> UC14
+Student --> UC5
+Student --> UC6
+Student --> UC22
+Student --> UC17
+Student --> UC26
+
+' Связи Менеджер
+Manager --> UC31
+Manager --> UC33
+Manager --> UC35
+
+' Связи Администратор
+Admin --> UC32
+Admin --> UC34
+
+' Связи ИИ
+AI --> UC18
+AI --> UC21
+AI --> UC20
+AI --> UC19
+
+' Наследование
+Student --|> Guest
+Manager --|> Student
+Admin --|> Manager
+
+' Include связи
+UC11 ..> UC21 : <<include>>
+UC10 ..> UC15 : <<include>>
+UC11 ..> UC23 : <<include>>
+UC14 ..> UC24 : <<include>>
+UC13 ..> UC25 : <<include>>
+UC5 ..> UC6 : <<include>>
+
+' Extend связи
+UC9 ..> UC5 : <<extend>>
+UC16 ..> UC10 : <<extend>>
+UC27 ..> UC25 : <<extend>>
+
+@enduml

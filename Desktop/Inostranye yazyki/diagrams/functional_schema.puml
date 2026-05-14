@@ -1,0 +1,107 @@
+@startuml LinguaAI_Functional_Schema
+!theme plain
+skinparam shadowing false
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam actorStyle default
+skinparam usecaseBorderColor #555555
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam actorBorderColor #333333
+skinparam arrowColor #444444
+skinparam usecase {
+  BorderColor #555555
+  BackgroundColor #FFFFFF
+  FontSize 11
+}
+
+title LinguaAI — Функциональная схема системы
+
+' ==================== АКТОРЫ ====================
+actor "Гость" as Guest
+actor "Пользователь" as User
+actor "Менеджер" as Manager
+actor "Администратор" as Admin
+
+' ==================== USE CASES ====================
+
+usecase "Регистрация\nв системе" as UC_Register
+usecase "Авторизация\nв системе" as UC_Login
+
+usecase "Просмотр\nкарточек" as UC_Browse
+usecase "Изучение слов\n(Study Mode)" as UC_Study
+usecase "Тест\n(Quiz Mode)" as UC_Quiz
+usecase "Флэш-карточки\n(SM-2)" as UC_Flashcards
+usecase "Озвучка слов\n(TTS)" as UC_TTS
+
+usecase "Игра: Matching\n(сопоставление)" as UC_Match
+usecase "Игра: Speed Round\n(на время)" as UC_Speed
+
+usecase "Создание словаря" as UC_CreateDict
+usecase "Добавление слова" as UC_AddWord
+usecase "Поиск и фильтрация\n(по языку, тегам)" as UC_SearchDict
+usecase "Экспорт CSV/JSON" as UC_Export
+usecase "Импорт CSV" as UC_Import
+
+usecase "ИИ-тьютор (чат)" as UC_AIChat
+usecase "Рекомендации ИИ" as UC_AIRecs
+usecase "Совет дня" as UC_AITip
+
+usecase "XP и уровни" as UC_XP
+usecase "Серия дней\n(streak)" as UC_Streak
+usecase "Достижения" as UC_Achievements
+usecase "Таблица лидеров" as UC_Leaderboard
+usecase "Статистика\nи прогресс" as UC_Charts
+
+usecase "Просмотр\nпользователей" as UC_UserList
+usecase "Блокировка\nпользователя" as UC_BlockUser
+usecase "Статистика\nсистемы" as UC_SysStats
+usecase "Смена ролей\nпользователей" as UC_ChangeRole
+usecase "Удаление\nпользователя" as UC_DeleteUser
+usecase "Управление\nправами" as UC_Permissions
+
+' ==================== ГОСТЬ ====================
+Guest --> UC_Register
+Guest --> UC_Login
+
+' ==================== ПОЛЬЗОВАТЕЛЬ ====================
+User --> UC_Login
+User --> UC_Browse
+User --> UC_Flashcards
+UC_Flashcards --> UC_Study
+UC_Flashcards --> UC_Quiz
+UC_Flashcards --> UC_TTS
+User --> UC_Match
+User --> UC_Speed
+User --> UC_CreateDict
+UC_CreateDict --> UC_AddWord
+UC_CreateDict --> UC_SearchDict
+UC_CreateDict --> UC_Export
+UC_CreateDict --> UC_Import
+User --> UC_AIChat
+UC_AIChat --> UC_AIRecs
+UC_AIChat --> UC_AITip
+User --> UC_XP
+UC_XP --> UC_Streak
+UC_XP --> UC_Achievements
+UC_XP --> UC_Leaderboard
+UC_XP --> UC_Charts
+
+' ==================== МЕНЕДЖЕР ====================
+Manager --> UC_UserList
+Manager --> UC_BlockUser
+Manager --> UC_SysStats
+
+' ==================== АДМИНИСТРАТОР ====================
+Admin --> UC_UserList
+Admin --> UC_ChangeRole
+Admin --> UC_DeleteUser
+Admin --> UC_Permissions
+Admin --> UC_SysStats
+
+' ==================== НАСЛЕДОВАНИЕ ====================
+User --|> Guest
+Manager --|> User
+Admin --|> Manager
+
+@enduml
