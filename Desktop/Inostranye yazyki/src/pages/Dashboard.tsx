@@ -122,6 +122,35 @@ const Dashboard: React.FC = () => {
     return () => clearTimeout(t);
   }, [user, isGuest]);
 
+  const QUESTS = [
+    { id: 'words5', title: 'Выучи 5 новых слов', desc: 'Добавь 5 карточек в изучение', icon: '📚', xp: 30 },
+    { id: 'speed', title: 'Speed Round', desc: 'Пройди скоростной раунд', icon: '⚡', xp: 40 },
+    { id: 'review10', title: 'Повтори 10 карточек', desc: 'Повтори слова на повторении', icon: '🔄', xp: 25 },
+    { id: 'ai_grammar', title: 'Спроси AI', desc: 'Задай вопрос AI-тьютору', icon: '🤖', xp: 20 },
+    { id: 'xp50', title: 'Набери 50 XP', desc: 'Заработай 50 XP сегодня', icon: '🎯', xp: 50 },
+    { id: 'matching', title: 'Игра на соответствие', desc: 'Пройди Matching Game', icon: '🧩', xp: 35 },
+  ];
+
+  const [dailyQuest, setDailyQuest] = useState(() => {
+    const saved = localStorage.getItem('linguaai_quest');
+    const today = new Date().toDateString();
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.date === today) return parsed;
+    }
+    const quest = QUESTS[Math.floor(Math.random() * QUESTS.length)];
+    const data = { ...quest, date: today, completed: false };
+    localStorage.setItem('linguaai_quest', JSON.stringify(data));
+    return data;
+  });
+
+  const completeQuest = () => {
+    if (dailyQuest.completed) return;
+    const updated = { ...dailyQuest, completed: true };
+    setDailyQuest(updated);
+    localStorage.setItem('linguaai_quest', JSON.stringify(updated));
+  };
+
   const xpToNextLevel = 500;
   const xpProgress = langProgress ? Math.min(100, (langProgress.xp % xpToNextLevel) / xpToNextLevel * 100) : 0;
   const wordsCount = useCountUp(isGuest ? 0 : (langProgress?.wordsLearned || 0));
@@ -181,6 +210,42 @@ const Dashboard: React.FC = () => {
         </div>
         <ArrowRight size={18} className="ai-quick-arrow" />
       </div>
+
+      <div className={`ai-quest-card ${dailyQuest.completed ? 'completed' : ''}`}>
+        <div className="ai-quest-header">
+          <div className="ai-quest-icon">{dailyQuest.icon}</div>
+          <div className="ai-quest-info">
+            <div className="ai-quest-title">{dailyQuest.completed ? '✅ Выполнено!' : `🔥 ${dailyQuest.title}`}</div>
+            <div className="ai-quest-desc">{dailyQuest.desc} · +{dailyQuest.xp} XP</div>
+          </div>
+          {!dailyQuest.completed && (
+            <button className="ai-quest-btn" onClick={() => {
+              if (dailyQuest.id === 'ai_grammar') navigate('/ai-tutor');
+              else if (dailyQuest.id === 'speed') navigate('/games/speed');
+              else if (dailyQuest.id === 'matching') navigate('/games/matching');
+              else if (dailyQuest.id === 'review10' || dailyQuest.id === 'words5') navigate('/flashcards');
+              else navigate('/games');
+            }}>
+              Выполнить
+            </button>
+          )}
+        </div>
+      </div>
+
+      {dueCards.length > 0 && (
+        <div className="ai-companion-card">
+          <div className="ai-companion-icon">🤖</div>
+          <div className="ai-companion-text">
+            <div className="ai-companion-title">
+              {dueCards.length >= 10 ? `🔥 У тебя ${dueCards.length} карточек на повторение!` :
+               dueCards.length >= 5 ? `📚 ${dueCards.length} карточек ждут повторения` :
+               `💡 Давай повторим ${dueCards.length} слова?`}
+            </div>
+            <div className="ai-companion-desc">Повторение — ключ к запоминанию</div>
+          </div>
+          <button className="ai-companion-btn" onClick={() => navigate('/flashcards')}>Повторить</button>
+        </div>
+      )}
 
       <div className="stats-grid">
         <div className="stat-card" onClick={() => navigate('/progress')}

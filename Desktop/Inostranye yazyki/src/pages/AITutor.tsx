@@ -26,6 +26,46 @@ const MODES: { key: AIMode; label: string; icon: string }[] = [
   { key: 'dialog', label: 'Диалоги', icon: '🎭' },
 ];
 
+type AIPersona = 'tutor' | 'british' | 'anime' | 'german' | 'american';
+
+const PERSONAS: { key: AIPersona; label: string; flag: string; desc: string; prompt: string }[] = [
+  {
+    key: 'tutor',
+    label: 'Тьютор',
+    flag: '🤖',
+    desc: 'Нейтральный, понятный',
+    prompt: 'Ты — дружелюбный преподаватель. Объясняй просто и понятно.',
+  },
+  {
+    key: 'british',
+    label: 'British Teacher',
+    flag: '🇬🇧',
+    desc: 'Вежливый, академичный',
+    prompt: 'Ты — вежливый британский учитель. Говори формально, с небольшим юмором. Используй британский английский где уместно. Начинай иногда с "I say" или "Quite right". Будь немного саркастичен, но добр.',
+  },
+  {
+    key: 'anime',
+    label: 'Anime Girl',
+    flag: '🇯🇵',
+    desc: 'Энергичная, милая',
+    prompt: 'Ты — энергичная и милая персонаж в стиле аниме. Используй восклицательные знаки, эмоции, слова типа "ня", "кавайи", "сугоий". Будь очень поддерживающей и энтузиастичной. Добавляй эмодзи.',
+  },
+  {
+    key: 'german',
+    label: 'German Teacher',
+    flag: '🇩🇪',
+    desc: 'Строгий, точный',
+    prompt: 'Ты — строгий немецкий учитель. Требуй точности, исправляй каждую ошибку. Говори чётко и по делу. Иногда добавляй немецкие слова в скобках. Будь требовательным, но справедливым.',
+  },
+  {
+    key: 'american',
+    label: 'Friendly American',
+    flag: '🇺🇸',
+    desc: 'Дружелюбный, крутой',
+    prompt: 'Ты — дружелюбный американский парень. Говори неформально, используй сленг типа "awesome", "cool", "got it". Будь расслабленным и мотивирующим. Похваливай пользователя.',
+  },
+];
+
 const QUICK_QUESTIONS: Record<AIMode, string[]> = {
   tutor: [
     'Как улучшить произношение?',
@@ -78,6 +118,10 @@ const AITutor: React.FC = () => {
     }];
   });
   const [mode, setMode] = useState<AIMode>('tutor');
+  const [persona, setPersona] = useState<AIPersona>(() => {
+    const saved = localStorage.getItem('linguaai_chat_persona');
+    return (saved as AIPersona) || 'tutor';
+  });
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -89,6 +133,10 @@ const AITutor: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('linguaai_chat_mode', mode);
   }, [mode]);
+
+  useEffect(() => {
+    localStorage.setItem('linguaai_chat_persona', persona);
+  }, [persona]);
 
   const allWords = dictionaries.flatMap(d => d.words);
   const recommendations = user ? getAIRecommendations(user, flashcards) : [];
@@ -106,8 +154,12 @@ const AITutor: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const personaData = PERSONAS.find(p => p.key === persona) || PERSONAS[0];
+
   const getSystemPrompt = (m: AIMode): string => {
-    const base = `Ты персональный преподаватель иностранных языков в приложении LinguaAI. Пользователь изучает ${LANGUAGE_NAMES[currentLanguage]}. Отвечай на русском, если не попросили иначе. Не используй ** или *.`;
+    const base = `Ты персональный преподаватель иностранных языков в приложении LinguaAI. Пользователь изучает ${LANGUAGE_NAMES[currentLanguage]}. Отвечай на русском, если не попросили иначе. Не используй ** или *.
+
+${personaData.prompt}`;
     switch (m) {
       case 'tutor': return `${base}
 Ты — тьютор. Помогай с произношением, грамматикой, лексикой, методиками запоминания.
@@ -284,6 +336,21 @@ const AITutor: React.FC = () => {
                 onClick={() => setMode(m.key)}
               >
                 <span>{m.icon}</span> {m.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="ai-persona-bar">
+            <span className="ai-persona-label">Персонаж:</span>
+            {PERSONAS.map(p => (
+              <button
+                key={p.key}
+                className={`ai-persona-btn ${persona === p.key ? 'active' : ''}`}
+                onClick={() => setPersona(p.key)}
+                title={p.desc}
+              >
+                <span>{p.flag}</span>
+                <span className="ai-persona-name">{p.label}</span>
               </button>
             ))}
           </div>

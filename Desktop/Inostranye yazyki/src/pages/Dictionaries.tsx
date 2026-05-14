@@ -158,18 +158,18 @@ const Dictionaries: React.FC = () => {
                 className={`dict-card ${selectedDict?.id === dict.id ? 'selected' : ''}`}
                 onClick={() => setSelectedDictId(dict.id)}
               >
-                <div className="dict-card-color" style={{ background: dict.coverColor }} />
+                <div className="dict-card-color" style={{ background: dict.coverColor || '#5555cc' }} />
                 <div className="dict-card-body">
                   <div className="dict-card-top">
-                    <span className="dict-lang">{LANGUAGE_FLAGS[dict.language]} {LANGUAGE_NAMES[dict.language]}</span>
-                    <span className="dict-level">{levelLabels[dict.level]}</span>
+                    <span className="dict-lang">{LANGUAGE_FLAGS[dict.language] || '🌐'} {LANGUAGE_NAMES[dict.language] || dict.language}</span>
+                    <span className="dict-level">{levelLabels[dict.level] || dict.level}</span>
                   </div>
-                  <div className="dict-card-name">{dict.name}</div>
-                  <div className="dict-card-desc">{dict.description}</div>
+                  <div className="dict-card-name">{dict.name || 'Без названия'}</div>
+                  <div className="dict-card-desc">{dict.description || ''}</div>
                   <div className="dict-card-footer">
-                    <span className="dict-word-count">{dict.words.length} слов</span>
+                    <span className="dict-word-count">{(dict.words || []).length} слов</span>
                     <div className="dict-tags">
-                      {dict.tags.slice(0, 2).map(t => (
+                      {(dict.tags || []).slice(0, 2).map(t => (
                         <span key={t} className="tag">{t}</span>
                       ))}
                     </div>
