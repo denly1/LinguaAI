@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Clock, Shield, X, Star, LogIn, Play, CheckCircle, MessageSquare, Award, ChevronRight, Download } from 'lucide-react';
 import { useCourses } from '../context/CoursesContext';
 import { useAuth } from '../context/AuthContext';
@@ -499,12 +499,30 @@ const TYPE_LABELS: Record<string, string> = {
 interface CourseViewModalProps { course: Course; onClose: () => void; }
 const CourseViewModal: React.FC<CourseViewModalProps> = ({ course, onClose }) => {
   const { authState } = useAuth();
-  const lessons = COURSE_LESSONS[course.id] || generateLessons(course);
+  const lessonTypes: Array<'video' | 'practice' | 'test' | 'speaking'> = ['video', 'practice', 'test', 'speaking'];
+  const lessons = (course.lessons || []).map((l, i) => ({
+    id: l.id,
+    title: l.title,
+    description: l.description || '',
+    content: l.content || '',
+    duration: '15 мин',
+    type: lessonTypes[i % lessonTypes.length],
+    order: l.order || i + 1,
+  }));
   const [activeLessonId, setActiveLessonId] = useState(lessons[0]?.id);
-  const [done, setDone] = useState<Set<string>>(new Set());
+  const [done, setDone] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem(`course-progress-${course.id}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
   const activeLesson = lessons.find(l => l.id === activeLessonId);
   const progress = Math.round((done.size / lessons.length) * 100);
   const allDone = done.size === lessons.length && lessons.length > 0;
+
+  useEffect(() => {
+    localStorage.setItem(`course-progress-${course.id}`, JSON.stringify(Array.from(done)));
+  }, [done, course.id]);
 
   const handleCertificate = () => {
     generateCertificate({
@@ -571,48 +589,56 @@ const CourseViewModal: React.FC<CourseViewModalProps> = ({ course, onClose }) =>
                 </div>
 
                 <div className="cvm-content-body">
-                  {activeLesson.type === 'video' && (
-                    <div className="cvm-video-placeholder">
-                      <div className="cvm-video-icon"><Play size={36} /></div>
-                      <div className="cvm-video-label">Нажмите для просмотра урока</div>
-                      <div className="cvm-video-sub">{activeLesson.duration} · HD видео с субтитрами</div>
+                  {activeLesson.content ? (
+                    <div className="cvm-real-content">
+                      <p style={{ whiteSpace: 'pre-line', lineHeight: 1.7, fontSize: 15, color: 'var(--text)' }}>{activeLesson.content}</p>
                     </div>
-                  )}
-                  {activeLesson.type === 'practice' && (
-                    <div className="cvm-practice-block">
-                      <div className="cvm-practice-icon"><BookOpen size={32} /></div>
-                      <div className="cvm-practice-title">Практическое задание</div>
-                      <p className="cvm-practice-desc">Выполните упражнения по теме «{activeLesson.title}». Используйте карточки в разделе «Карточки» для закрепления новых слов.</p>
-                      <div className="cvm-practice-steps">
-                        <div className="cvm-step"><span>1</span> Прочитайте теорию</div>
-                        <div className="cvm-step"><span>2</span> Повторите слова в карточках</div>
-                        <div className="cvm-step"><span>3</span> Пройдите мини-тест</div>
-                      </div>
-                    </div>
-                  )}
-                  {activeLesson.type === 'speaking' && (
-                    <div className="cvm-practice-block">
-                      <div className="cvm-practice-icon"><MessageSquare size={32} /></div>
-                      <div className="cvm-practice-title">Разговорная практика</div>
-                      <p className="cvm-practice-desc">Отработайте диалоги с ИИ-тьютором. Перейдите в раздел «Тьютор» и попросите попрактиковаться по теме «{activeLesson.title}».</p>
-                      <div className="cvm-practice-steps">
-                        <div className="cvm-step"><span>1</span> Изучите образцы диалогов</div>
-                        <div className="cvm-step"><span>2</span> Практика с ИИ-тьютором</div>
-                        <div className="cvm-step"><span>3</span> Запись и самооценка</div>
-                      </div>
-                    </div>
-                  )}
-                  {activeLesson.type === 'test' && (
-                    <div className="cvm-practice-block">
-                      <div className="cvm-practice-icon"><Award size={32} /></div>
-                      <div className="cvm-practice-title">Проверочный тест</div>
-                      <p className="cvm-practice-desc">Пройдите тест для проверки знаний по пройденным урокам. Для сдачи необходимо набрать 70%.</p>
-                      <div className="cvm-practice-steps">
-                        <div className="cvm-step"><span>✓</span> Проходной балл: 70%</div>
-                        <div className="cvm-step"><span>⏱</span> Время: {activeLesson.duration}</div>
-                        <div className="cvm-step"><span>∞</span> Неограниченные попытки</div>
-                      </div>
-                    </div>
+                  ) : (
+                    <>
+                      {activeLesson.type === 'video' && (
+                        <div className="cvm-video-placeholder">
+                          <div className="cvm-video-icon"><Play size={36} /></div>
+                          <div className="cvm-video-label">Нажмите для просмотра урока</div>
+                          <div className="cvm-video-sub">{activeLesson.duration} · HD видео с субтитрами</div>
+                        </div>
+                      )}
+                      {activeLesson.type === 'practice' && (
+                        <div className="cvm-practice-block">
+                          <div className="cvm-practice-icon"><BookOpen size={32} /></div>
+                          <div className="cvm-practice-title">Практическое задание</div>
+                          <p className="cvm-practice-desc">Выполните упражнения по теме «{activeLesson.title}». Используйте карточки в разделе «Карточки» для закрепления новых слов.</p>
+                          <div className="cvm-practice-steps">
+                            <div className="cvm-step"><span>1</span> Прочитайте теорию</div>
+                            <div className="cvm-step"><span>2</span> Повторите слова в карточках</div>
+                            <div className="cvm-step"><span>3</span> Пройдите мини-тест</div>
+                          </div>
+                        </div>
+                      )}
+                      {activeLesson.type === 'speaking' && (
+                        <div className="cvm-practice-block">
+                          <div className="cvm-practice-icon"><MessageSquare size={32} /></div>
+                          <div className="cvm-practice-title">Разговорная практика</div>
+                          <p className="cvm-practice-desc">Отработайте диалоги с ИИ-тьютором. Перейдите в раздел «Тьютор» и попросите попрактиковаться по теме «{activeLesson.title}».</p>
+                          <div className="cvm-practice-steps">
+                            <div className="cvm-step"><span>1</span> Изучите образцы диалогов</div>
+                            <div className="cvm-step"><span>2</span> Практика с ИИ-тьютором</div>
+                            <div className="cvm-step"><span>3</span> Запись и самооценка</div>
+                          </div>
+                        </div>
+                      )}
+                      {activeLesson.type === 'test' && (
+                        <div className="cvm-practice-block">
+                          <div className="cvm-practice-icon"><Award size={32} /></div>
+                          <div className="cvm-practice-title">Проверочный тест</div>
+                          <p className="cvm-practice-desc">Пройдите тест для проверки знаний по пройденным урокам. Для сдачи необходимо набрать 70%.</p>
+                          <div className="cvm-practice-steps">
+                            <div className="cvm-step"><span>✓</span> Проходной балл: 70%</div>
+                            <div className="cvm-step"><span>⏱</span> Время: {activeLesson.duration}</div>
+                            <div className="cvm-step"><span>∞</span> Неограниченные попытки</div>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
