@@ -436,6 +436,72 @@ const GameModal: React.FC<GameModalProps> = ({ initial, onSave, onClose, created
   );
 };
 
+// ─── AiCourseModal ────────────────────────────────────────────────────────────
+interface AiCourseModalProps {
+  onClose: () => void;
+  onGenerate: (topic: string, language: LanguageCode, level: DifficultyLevel, tier: CourseTier, lessonCount: number) => void;
+  loading: boolean;
+}
+
+const AiCourseModal: React.FC<AiCourseModalProps> = ({ onClose, onGenerate, loading }) => {
+  const [topic, setTopic] = useState('');
+  const [language, setLanguage] = useState<LanguageCode>('en');
+  const [level, setLevel] = useState<DifficultyLevel>('beginner');
+  const [tier, setTier] = useState<CourseTier>('standard');
+  const [lessonCount, setLessonCount] = useState(5);
+
+  return (
+    <div className="mgr-modal-overlay" onClick={onClose}>
+      <div className="mgr-modal" onClick={e => e.stopPropagation()}>
+        <div className="mgr-modal-header">
+          <span className="mgr-modal-title">🤖 Сгенерировать курс AI</span>
+          <button className="mgr-modal-close" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="mgr-modal-body">
+          <div className="form-group">
+            <label>Тема курса</label>
+            <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="Например: Английский для путешествий" />
+          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Язык</label>
+              <select value={language} onChange={e => setLanguage(e.target.value as LanguageCode)}>
+                {LANG_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Уровень</label>
+              <select value={level} onChange={e => setLevel(e.target.value as DifficultyLevel)}>
+                {LEVEL_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="form-grid">
+            <div className="form-group">
+              <label>Тариф</label>
+              <select value={tier} onChange={e => setTier(e.target.value as CourseTier)}>
+                <option value="standard">Standard</option>
+                <option value="medium">Medium</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Кол-во уроков</label>
+              <input type="number" min={3} max={20} value={lessonCount} onChange={e => setLessonCount(Number(e.target.value))} />
+            </div>
+          </div>
+        </div>
+        <div className="mgr-modal-footer">
+          <button className="btn-cancel" onClick={onClose}>Отмена</button>
+          <button className="btn-save" disabled={!topic || loading} onClick={() => onGenerate(topic, language, level, tier, lessonCount)}>
+            {loading ? 'Генерация...' : '🤖 Сгенерировать'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── ManagerPanel ─────────────────────────────────────────────────────────────
 const ManagerPanel: React.FC = () => {
   const { state, dispatch } = useCourses();
@@ -445,6 +511,8 @@ const ManagerPanel: React.FC = () => {
   const [tab, setTab] = useState<Tab>('courses');
   const [search, setSearch] = useState('');
   const [courseModal, setCourseModal] = useState<{ open: boolean; item: Course | null }>({ open: false, item: null });
+  const [aiCourseModal, setAiCourseModal] = useState(false);
+  const [aiCourseLoading, setAiCourseLoading] = useState(false);
   const [testModal, setTestModal] = useState<{ open: boolean; item: Test | null }>({ open: false, item: null });
   const [gameModal, setGameModal] = useState<{ open: boolean; item: ManagedGame | null }>({ open: false, item: null });
 
@@ -470,6 +538,78 @@ const ManagerPanel: React.FC = () => {
   const toggleCourseStatus = (course: Course) => {
     const nextStatus: Course['status'] = course.status === 'published' ? 'draft' : 'published';
     dispatch({ type: 'UPDATE_COURSE', payload: { ...course, status: nextStatus, updatedAt: new Date().toISOString() } });
+  };
+
+  const handleAiCourseGenerate = async (topic: string, language: LanguageCode, level: DifficultyLevel, tier: CourseTier, lessonCount: number) => {
+    setAiCourseLoading(true);
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `Ты — генератор образовательных курсов для LinguaAI. Отвечай ТОЛЬКО JSON объектом, без markdown, без комментариев, без слов вне JSON.
+Создай курс по теме "${topic}" для языка ${language}, уровень ${level}, ${lessonCount} уроков.
+JSON формат:
+{
+  "title": "Название курса",
+  "description": "Описание курса 1-2 предложения",
+  "emoji": "emoji флага",
+  "coverColor": "hex цвет",
+  "price": число,
+  "features": ["фича 1", "фича 2", ...],
+  "lessons": [
+    { "title": "Название урока", "description": "Короткое описание", "content": "Содержание урока (3-5 предложений)" }
+  ]
+}`,
+            },
+            { role: 'user', content: `Сгенерируй курс: ${topic}` },
+          ],
+        }),
+      });
+      const data = await res.json();
+      const raw = data?.choices?.[0]?.message?.content || '';
+      const cleaned = raw.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      const newCourse: Course = {
+        id: uuidv4(),
+        title: parsed.title || topic,
+        description: parsed.description || `Курс по теме "${topic}"`,
+        language,
+        level,
+        tier,
+        price: parsed.price || (tier === 'standard' ? 990 : tier === 'medium' ? 1990 : 4990),
+        status: 'draft',
+        coverColor: parsed.coverColor || '#4a6cf7',
+        emoji: parsed.emoji || '🌍',
+        features: parsed.features || [`${lessonCount} уроков`, 'Флеш-карточки'],
+        lessons: (parsed.lessons || []).map((l: any, i: number) => ({
+          id: uuidv4(),
+          title: l.title || `Урок ${i + 1}`,
+          description: l.description || '',
+          content: l.content || '',
+          order: i + 1,
+        })),
+        dictionaryIds: [],
+        testIds: [],
+        createdBy: currentUser.id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        totalStudents: 0,
+        rating: 0,
+      };
+
+      dispatch({ type: 'ADD_COURSE', payload: newCourse });
+      setAiCourseModal(false);
+    } catch (err) {
+      console.error('AI course generation error:', err);
+      alert('Не удалось сгенерировать курс. Попробуйте ещё раз.');
+    } finally {
+      setAiCourseLoading(false);
+    }
   };
 
   // ── Tests ─────────────────────────────────────────
@@ -566,6 +706,9 @@ const ManagerPanel: React.FC = () => {
               <Search size={14} color="var(--text-muted)" />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по курсам..." />
             </div>
+            <button className="btn-add ai-gen-btn" onClick={() => setAiCourseModal(true)}>
+              <span>🤖</span> AI курс
+            </button>
             <button className="btn-add" onClick={() => setCourseModal({ open: true, item: null })}>
               <Plus size={15} /> Новый курс
             </button>
@@ -823,6 +966,13 @@ const ManagerPanel: React.FC = () => {
           onSave={saveCourse}
           onClose={() => setCourseModal({ open: false, item: null })}
           createdBy={currentUser.id}
+        />
+      )}
+      {aiCourseModal && (
+        <AiCourseModal
+          onClose={() => setAiCourseModal(false)}
+          onGenerate={handleAiCourseGenerate}
+          loading={aiCourseLoading}
         />
       )}
       {testModal.open && (

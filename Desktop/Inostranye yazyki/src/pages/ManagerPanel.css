@@ -143,6 +143,11 @@
 
 .btn-add:hover { opacity: 0.9; }
 
+.ai-gen-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  color: white;
+}
+
 /* Table */
 .manager-table {
   width: 100%;

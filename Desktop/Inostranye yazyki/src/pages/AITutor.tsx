@@ -26,13 +26,13 @@ const MODES: { key: AIMode; label: string; icon: string }[] = [
   { key: 'dialog', label: 'Диалоги', icon: '🎭' },
 ];
 
-type AIPersona = 'tutor' | 'british' | 'anime' | 'german' | 'american';
+type AIPersona = 'tutor' | 'british';
 
 const PERSONAS: { key: AIPersona; label: string; flag: string; desc: string; prompt: string }[] = [
   {
     key: 'tutor',
     label: 'Тьютор',
-    flag: '🤖',
+    flag: '🎓',
     desc: 'Нейтральный, понятный',
     prompt: 'Ты — дружелюбный преподаватель. Объясняй просто и понятно.',
   },
@@ -41,28 +41,7 @@ const PERSONAS: { key: AIPersona; label: string; flag: string; desc: string; pro
     label: 'British Teacher',
     flag: '🇬🇧',
     desc: 'Вежливый, академичный',
-    prompt: 'Ты — вежливый британский учитель. Говори формально, с небольшим юмором. Используй британский английский где уместно. Начинай иногда с "I say" или "Quite right". Будь немного саркастичен, но добр.',
-  },
-  {
-    key: 'anime',
-    label: 'Anime Girl',
-    flag: '🇯🇵',
-    desc: 'Энергичная, милая',
-    prompt: 'Ты — энергичная и милая персонаж в стиле аниме. Используй восклицательные знаки, эмоции, слова типа "ня", "кавайи", "сугоий". Будь очень поддерживающей и энтузиастичной. Добавляй эмодзи.',
-  },
-  {
-    key: 'german',
-    label: 'German Teacher',
-    flag: '🇩🇪',
-    desc: 'Строгий, точный',
-    prompt: 'Ты — строгий немецкий учитель. Требуй точности, исправляй каждую ошибку. Говори чётко и по делу. Иногда добавляй немецкие слова в скобках. Будь требовательным, но справедливым.',
-  },
-  {
-    key: 'american',
-    label: 'Friendly American',
-    flag: '🇺🇸',
-    desc: 'Дружелюбный, крутой',
-    prompt: 'Ты — дружелюбный американский парень. Говори неформально, используй сленг типа "awesome", "cool", "got it". Будь расслабленным и мотивирующим. Похваливай пользователя.',
+    prompt: 'Ты — вежливый британский учитель. Говори формально, с небольшим юмором. Используй британский английский где уместно. Будь немного саркастичен, но добр.',
   },
 ];
 
@@ -164,7 +143,7 @@ ${personaData.prompt}`;
       case 'tutor': return `${base}
 Ты — тьютор. Помогай с произношением, грамматикой, лексикой, методиками запоминания.
 Если пользователь хочет тест — добавь маркер [TEST:/games/speed], [TEST:/games/matching], [TEST:/flashcards] или [TEST:/games].
-Если просит словарь — дай список "слово — перевод" и маркер [DICT:тема].`;
+Если просит словарь — составь список в формате "слово — перевод", каждое слово с новой строки. В конце добавь маркер [DICT:тема].`;
       case 'translate': return `${base}
 Ты — переводчик. Переводи точно, но живо. Давай контекст использования, синонимы, примеры предложений. Если слово имеет несколько значений — перечисли их.`;
       case 'grammar': return `${base}
@@ -227,9 +206,15 @@ ${personaData.prompt}`;
       if (dictTopic) {
         const lines = rawText.split('\n');
         for (const line of lines) {
-          const m = line.match(/^([\w\s]+)[\s]*[—\-–][\s]*(.+)$/);
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('**')) continue;
+          const m = trimmed.match(/^[-\s•]*([^\n—\-–:]+)[\s]*[—\-–][\s]*(.+)$/);
           if (m) {
-            dictWords.push({ term: m[1].trim(), translation: m[2].trim() });
+            const term = m[1].trim();
+            const translation = m[2].trim();
+            if (term && translation && term.length < 60 && translation.length < 100) {
+              dictWords.push({ term, translation });
+            }
           }
         }
       }

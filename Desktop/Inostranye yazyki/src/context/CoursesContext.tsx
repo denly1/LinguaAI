@@ -223,8 +223,8 @@ function apiPurchaseToLocal(p: ApiPurchase): Purchase {
 }
 
 const initialState: CoursesState = {
-  courses: DEMO_COURSES,
-  tests: DEMO_TESTS,
+  courses: [],
+  tests: [],
   games: [],
   purchases: [],
   reviews: [],
@@ -287,17 +287,13 @@ const CoursesContext = createContext<CoursesContextType | undefined>(undefined);
 export const CoursesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Загружаем курсы с бэка (полная замена DEMO если бэк доступен)
+  // Загружаем курсы с бэка
   useEffect(() => {
     apiGetAllCourses()
       .then(res => {
         if (res.courses.length > 0) {
           const apiCourses = res.courses.map(apiCourseToLocal);
-          // Сохраняем менеджерские курсы созданные локально (не из DEMO и не из бэка)
-          const demoCourseIds = DEMO_COURSES.map(d => d.id);
-          const localOnly = state.courses.filter(
-            c => !demoCourseIds.includes(c.id) && !apiCourses.find(a => a.id === c.id)
-          );
+          const localOnly = state.courses.filter(c => !apiCourses.find(a => a.id === c.id));
           dispatch({ type: 'LOAD', payload: { ...state, courses: [...apiCourses, ...localOnly] } });
         }
       })
