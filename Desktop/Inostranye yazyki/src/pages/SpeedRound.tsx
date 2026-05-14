@@ -25,6 +25,9 @@ const SpeedRound: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [typingMode, setTypingMode] = useState(false);
   const [typedAnswer, setTypedAnswer] = useState('');
+  const [xpFloat, setXpFloat] = useState<{ val: number; key: number } | null>(null);
+  const [shakeKey, setShakeKey] = useState(0);
+  const [comboKey, setComboKey] = useState(0);
 
   const langCards = flashcards.filter(f => f.word.language === currentLanguage);
 
@@ -88,9 +91,13 @@ const SpeedRound: React.FC = () => {
       const newStreak = streak + 1;
       setStreak(newStreak);
       setMaxStreak(m => Math.max(m, newStreak));
-      setScore(s => s + 1 + Math.floor(newStreak / 5));
+      const xpGain = 1 + Math.floor(newStreak / 5);
+      setScore(s => s + xpGain);
+      setXpFloat({ val: xpGain * 10, key: Date.now() });
+      if (newStreak >= 3) setComboKey(Date.now());
     } else {
       setStreak(0);
+      setShakeKey(Date.now());
     }
     setTypedAnswer('');
     setTimeout(() => {
@@ -98,7 +105,7 @@ const SpeedRound: React.FC = () => {
       const nextIdx = (idx + 1) % cards.length;
       setIdx(nextIdx);
       setOptions(buildOptions(nextIdx, cards));
-    }, 300);
+    }, 400);
   }, [gameState, cards, idx, streak, updateFlashcardAfterReview, buildOptions]);
 
   useEffect(() => {
@@ -202,10 +209,14 @@ const SpeedRound: React.FC = () => {
           </svg>
           <span className="speed-timer-text" style={{ color: timerColor }}>{timeLeft}</span>
         </div>
-        <div className="speed-hud-item streak">🔥 {streak > 1 ? `x${streak}` : streak}</div>
+        <div key={comboKey} className={`speed-hud-item streak ${streak >= 3 ? 'combo-active' : ''}`}>🔥 {streak > 1 ? `x${streak}` : streak}</div>
       </div>
 
-      <div className={`speed-card ${feedback === 'correct' ? 'correct-flash' : feedback === 'wrong' ? 'wrong-flash' : ''}`}>
+      {xpFloat && (
+        <div key={xpFloat.key} className="xp-float">+{xpFloat.val} XP</div>
+      )}
+
+      <div key={shakeKey} className={`speed-card ${feedback === 'correct' ? 'correct-flash' : feedback === 'wrong' ? 'wrong-flash shake' : ''}`}>
         <div className="speed-word">{card.word.term}</div>
         {card.word.phonetic && <div className="speed-phonetic">{card.word.phonetic}</div>}
         {streak >= 3 && <div className="streak-badge-inline">🔥 Серия x{streak}</div>}
