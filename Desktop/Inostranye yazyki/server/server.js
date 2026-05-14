@@ -5,7 +5,6 @@ const cors = require('cors');
 const { sendCourseReceipt } = require('./emailService');
 const { chatWithAI, OPENROUTER_MODEL } = require('./aiService');
 
-// DB — подключение к PostgreSQL
 require('./db');
 
 const app = express();
@@ -14,18 +13,15 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
-// ── Роуты БД ─────────────────────────────────────────────────────────────────
-app.use('/api/auth',      require('./routes/auth'));
-app.use('/api/users',     require('./routes/users'));
-app.use('/api/courses',   require('./routes/courses'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/courses', require('./routes/courses'));
 app.use('/api/purchases', require('./routes/purchases'));
 
-// ── Health ───────────────────────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, model: OPENROUTER_MODEL, time: new Date().toISOString() });
 });
 
-// ── Email: чек об оплате курса ───────────────────────────────────────────────
 app.post('/api/send-receipt', async (req, res) => {
   try {
     const { userEmail, userName, course, purchase } = req.body;
@@ -41,7 +37,6 @@ app.post('/api/send-receipt', async (req, res) => {
   }
 });
 
-// ── Чат-тьютор: прокси ─────────────────────────────────────────────────────
 app.post('/api/ai-chat', async (req, res) => {
   try {
     const { messages, temperature, maxTokens, model } = req.body || {};

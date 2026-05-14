@@ -107,7 +107,7 @@ const Auth: React.FC = () => {
                   <User size={16} className="auth-input-icon" />
                   <input
                     type="text"
-                    placeholder="Александр"
+                    placeholder="Имя"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     required
