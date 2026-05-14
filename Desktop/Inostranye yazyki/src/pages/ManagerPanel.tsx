@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   BookOpen, Plus, Edit3, Trash2, Search,
   FileText, Gamepad2, ShoppingCart, X,
-  Download, Upload, Users, BarChart3, Shield
+  Download, Upload, Users, BarChart3, Shield,
+  Copy, Mail, Tag, ClipboardList, Eye, CheckSquare, Square, Send
 } from 'lucide-react';
 import { useCourses, uuidv4 } from '../context/CoursesContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +14,7 @@ import {
 import { LanguageCode, DifficultyLevel } from '../types/index';
 import './ManagerPanel.css';
 
-type Tab = 'courses' | 'tests' | 'games' | 'purchases' | 'users' | 'reports';
+type Tab = 'courses' | 'tests' | 'games' | 'purchases' | 'users' | 'reports' | 'promocodes' | 'broadcast' | 'audit';
 
 const LANG_OPTIONS: { value: LanguageCode; label: string }[] = [
   { value: 'en', label: '🇬🇧 Английский' },
@@ -515,6 +516,22 @@ const ManagerPanel: React.FC = () => {
   const [reports, setReports] = useState<any>(null);
   const [importModal, setImportModal] = useState(false);
   const [importText, setImportText] = useState('');
+  // bulk actions
+  const [selectedCourseIds, setSelectedCourseIds] = useState<Set<string>>(new Set());
+  // promocodes
+  const [promocodes, setPromocodes] = useState<any[]>([]);
+  const [promoModal, setPromoModal] = useState(false);
+  const [promoForm, setPromoForm] = useState({ code: '', discount_percent: '', discount_amount: '', max_uses: '', expires_at: '', applicable_tiers: 'all', is_active: true });
+  // broadcast
+  const [broadcastSubject, setBroadcastSubject] = useState('');
+  const [broadcastHtml, setBroadcastHtml] = useState('');
+  const [broadcastTarget, setBroadcastTarget] = useState('all');
+  const [broadcastSending, setBroadcastSending] = useState(false);
+  // audit
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditStats, setAuditStats] = useState<any>(null);
+  // user detail
+  const [userDetail, setUserDetail] = useState<any>(null);
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -530,6 +547,22 @@ const ManagerPanel: React.FC = () => {
       fetch('/api/users/stats/dashboard')
         .then(r => r.json())
         .then(d => { if (d.success) setReports(d.stats); })
+        .catch(console.error);
+    }
+    if (tab === 'promocodes' && isAdmin) {
+      fetch('/api/promocodes')
+        .then(r => r.json())
+        .then(d => { if (d.success) setPromocodes(d.promocodes); })
+        .catch(console.error);
+    }
+    if (tab === 'audit' && isAdmin) {
+      fetch('/api/audit')
+        .then(r => r.json())
+        .then(d => { if (d.success) setAuditLogs(d.logs); })
+        .catch(console.error);
+      fetch('/api/audit/stats')
+        .then(r => r.json())
+        .then(d => { if (d.success) setAuditStats(d); })
         .catch(console.error);
     }
   }, [tab, isAdmin]);
@@ -714,6 +747,86 @@ JSON формат:
     setUsers(prev => prev.filter(u => u.id !== id));
   };
 
+  // ── Bulk actions ─────────────────────────────────
+  const toggleSelectCourse = (id: string) => {
+    setSelectedCourseIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const selectAllCourses = () => {
+    if (selectedCourseIds.size === filteredCourses.length) setSelectedCourseIds(new Set());
+    else setSelectedCourseIds(new Set(filteredCourses.map(c => c.id)));
+  };
+  const bulkDeleteCourses = async () => {
+    if (!window.confirm(`Удалить ${selectedCourseIds.size} курсов?`)) return;
+    await fetch('/api/courses/bulk/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: Array.from(selectedCourseIds) }) });
+    selectedCourseIds.forEach(id => dispatch({ type: 'DELETE_COURSE', payload: id }));
+    setSelectedCourseIds(new Set());
+  };
+  const bulkStatusCourses = async (status: string) => {
+    await fetch('/api/courses/bulk/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: Array.from(selectedCourseIds), status }) });
+    selectedCourseIds.forEach(id => {
+      const c = state.courses.find(x => x.id === id);
+      if (c) dispatch({ type: 'UPDATE_COURSE', payload: { ...c, status: status as any } });
+    });
+    setSelectedCourseIds(new Set());
+  };
+  const duplicateCourse = async (id: string) => {
+    const res = await fetch(`/api/courses/${id}/duplicate`, { method: 'POST' });
+    const json = await res.json();
+    if (json.success) dispatch({ type: 'ADD_COURSE', payload: json.course });
+  };
+
+  // ── Promocodes ─────────────────────────────────────
+  const savePromocode = async () => {
+    const body = {
+      code: promoForm.code,
+      discount_percent: promoForm.discount_percent ? parseInt(promoForm.discount_percent) : null,
+      discount_amount: promoForm.discount_amount ? parseInt(promoForm.discount_amount) : null,
+      max_uses: promoForm.max_uses ? parseInt(promoForm.max_uses) : null,
+      expires_at: promoForm.expires_at || null,
+      applicable_tiers: promoForm.applicable_tiers === 'all' ? null : [promoForm.applicable_tiers],
+      is_active: promoForm.is_active,
+    };
+    const res = await fetch('/api/promocodes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const json = await res.json();
+    if (json.success) { setPromocodes(prev => [json.promocode, ...prev]); setPromoModal(false); setPromoForm({ code: '', discount_percent: '', discount_amount: '', max_uses: '', expires_at: '', applicable_tiers: 'all', is_active: true }); }
+    else alert(json.error);
+  };
+  const togglePromo = async (id: string, isActive: boolean) => {
+    await fetch(`/api/promocodes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_active: isActive }) });
+    setPromocodes(prev => prev.map(p => p.id === id ? { ...p, is_active: isActive } : p));
+  };
+  const deletePromo = async (id: string) => {
+    if (!window.confirm('Удалить промокод?')) return;
+    await fetch(`/api/promocodes/${id}`, { method: 'DELETE' });
+    setPromocodes(prev => prev.filter(p => p.id !== id));
+  };
+
+  // ── Broadcast ──────────────────────────────────────
+  const sendBroadcast = async () => {
+    if (!broadcastSubject.trim() || !broadcastHtml.trim()) return;
+    setBroadcastSending(true);
+    const res = await fetch('/api/broadcast/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject: broadcastSubject, html: broadcastHtml, target: broadcastTarget }),
+    });
+    const json = await res.json();
+    setBroadcastSending(false);
+    if (json.success) alert(`Отправлено ${json.sent} из ${json.total}`);
+    else alert('Ошибка: ' + json.error);
+  };
+
+  // ── User detail ────────────────────────────────────
+  const openUserDetail = (u: any) => {
+    const userPurchases = state.purchases.filter(p => p.userId === u.id);
+    const userCourses = state.courses.filter(c => userPurchases.some(p => p.courseId === c.id && p.status === 'confirmed'));
+    setUserDetail({ ...u, purchases: userPurchases, courses: userCourses });
+  };
+
   const filteredPurchases = state.purchases.filter(p => {
     if (!search) return true;
     const course = state.courses.find(c => c.id === p.courseId);
@@ -761,6 +874,9 @@ JSON формат:
           ...(isAdmin ? [
             { key: 'users' as Tab, label: 'Пользователи', icon: <Users size={14} />, count: users.length },
             { key: 'reports' as Tab, label: 'Отчёты', icon: <BarChart3 size={14} />, count: 0 },
+            { key: 'promocodes' as Tab, label: 'Промокоды', icon: <Tag size={14} />, count: promocodes.length },
+            { key: 'broadcast' as Tab, label: 'Рассылка', icon: <Mail size={14} />, count: 0 },
+            { key: 'audit' as Tab, label: 'Журнал', icon: <ClipboardList size={14} />, count: auditLogs.length },
           ] : []),
         ]).map(t => (
           <button
@@ -783,6 +899,15 @@ JSON формат:
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Поиск по курсам..." />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
+              {selectedCourseIds.size > 0 && (
+                <>
+                  <button className="btn-export" onClick={() => bulkStatusCourses('published')}>✓ Опубликовать</button>
+                  <button className="btn-export" onClick={() => bulkStatusCourses('draft')}>⏸ В черновик</button>
+                  <button className="btn-export" onClick={() => bulkStatusCourses('archived')}>🗃 Архив</button>
+                  <button className="btn-export danger" style={{ borderColor: '#ef4444', color: '#f87171' }} onClick={bulkDeleteCourses}><Trash2 size={12} /> Удалить</button>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)', alignSelf: 'center' }}>{selectedCourseIds.size} выбрано</span>
+                </>
+              )}
               <button className="btn-export" onClick={() => exportCsv('courses/csv', 'courses.csv')} title="Экспорт CSV">
                 <Download size={14} /> CSV
               </button>
@@ -800,6 +925,11 @@ JSON формат:
           <table className="manager-table">
             <thead>
               <tr>
+                <th style={{ width: 40 }}>
+                  <button className="tbl-btn" onClick={selectAllCourses} style={{ padding: 4 }}>
+                    {selectedCourseIds.size === filteredCourses.length && filteredCourses.length > 0 ? <CheckSquare size={14} /> : <Square size={14} />}
+                  </button>
+                </th>
                 <th>Курс</th>
                 <th>Язык</th>
                 <th>Тариф</th>
@@ -812,6 +942,11 @@ JSON формат:
             <tbody>
               {filteredCourses.map(c => (
                 <tr key={c.id}>
+                  <td>
+                    <button className="tbl-btn" onClick={() => toggleSelectCourse(c.id)} style={{ padding: 4 }}>
+                      {selectedCourseIds.has(c.id) ? <CheckSquare size={14} color="#6366f1" /> : <Square size={14} />}
+                    </button>
+                  </td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: 22 }}>{c.emoji}</span>
@@ -839,6 +974,9 @@ JSON формат:
                       <button className="tbl-btn" title={c.status === 'published' ? 'Снять с публикации' : 'Опубликовать'} onClick={() => toggleCourseStatus(c)}>
                         {c.status === 'published' ? '📴' : '📢'}
                       </button>
+                      <button className="tbl-btn" title="Дублировать" onClick={() => duplicateCourse(c.id)}>
+                        <Copy size={12} />
+                      </button>
                       <button className="tbl-btn" onClick={() => setCourseModal({ open: true, item: c })}>
                         <Edit3 size={12} />
                       </button>
@@ -851,7 +989,7 @@ JSON формат:
               ))}
               {filteredCourses.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
+                  <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
                     Курсов не найдено
                   </td>
                 </tr>
@@ -1135,9 +1273,14 @@ JSON формат:
                     <td>{u.total_xp}</td>
                     <td>{u.streak}</td>
                     <td>
-                      <button className="tbl-btn danger" onClick={() => deleteUser(u.id)}>
-                        <Trash2 size={12} />
-                      </button>
+                      <div className="tbl-actions">
+                        <button className="tbl-btn" onClick={() => openUserDetail(u)} title="Детали">
+                          <Eye size={12} />
+                        </button>
+                        <button className="tbl-btn danger" onClick={() => deleteUser(u.id)}>
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1270,6 +1413,275 @@ JSON формат:
               <button className="btn-cancel" onClick={() => setImportModal(false)}>Отмена</button>
               <button className="btn-save" onClick={importCourses} disabled={!importText.trim()}>
                 <Upload size={14} /> Импортировать
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PROMOCODES (admin only) ─────────────────────── */}
+      {tab === 'promocodes' && isAdmin && (
+        <>
+          <div className="manager-toolbar">
+            <div style={{ fontSize: 16, fontWeight: 700 }}>🏷 Промокоды</div>
+            <button className="btn-add" onClick={() => setPromoModal(true)}>
+              <Plus size={15} /> Новый промокод
+            </button>
+          </div>
+          {promocodes.length === 0 ? (
+            <div className="empty-tab">
+              <div className="empty-tab-icon">🏷</div>
+              <div className="empty-tab-title">Промокодов нет</div>
+              <div className="empty-tab-desc">Создайте промокоды для скидок</div>
+            </div>
+          ) : (
+            <table className="manager-table">
+              <thead>
+                <tr>
+                  <th>Код</th>
+                  <th>Скидка</th>
+                  <th>Использовано</th>
+                  <th>Лимит</th>
+                  <th>Истекает</th>
+                  <th>Статус</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {promocodes.map(p => (
+                  <tr key={p.id}>
+                    <td style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: 14 }}>{p.code}</td>
+                    <td>
+                      {p.discount_percent ? `${p.discount_percent}%` : p.discount_amount ? `${p.discount_amount} ₽` : '—'}
+                    </td>
+                    <td>{p.used_count || 0}</td>
+                    <td>{p.max_uses || '∞'}</td>
+                    <td>{p.expires_at ? new Date(p.expires_at).toLocaleDateString('ru-RU') : 'Нет'}</td>
+                    <td>
+                      <button className="tbl-btn" onClick={() => togglePromo(p.id, !p.is_active)}>
+                        <span className={`user-active-dot ${p.is_active ? 'active' : 'inactive'}`} />
+                        {p.is_active ? 'Активен' : 'Выключен'}
+                      </button>
+                    </td>
+                    <td>
+                      <button className="tbl-btn danger" onClick={() => deletePromo(p.id)}>
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+
+      {/* ── BROADCAST (admin only) ───────────────────────── */}
+      {tab === 'broadcast' && isAdmin && (
+        <>
+          <div className="manager-toolbar">
+            <div style={{ fontSize: 16, fontWeight: 700 }}>📧 Email-рассылка</div>
+          </div>
+          <div className="chart-section" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="mgr-field">
+              <label>Получатели</label>
+              <select value={broadcastTarget} onChange={e => setBroadcastTarget(e.target.value)}>
+                <option value="all">Все активные пользователи</option>
+                <option value="admins">Только админы</option>
+                <option value="managers">Только менеджеры</option>
+              </select>
+            </div>
+            <div className="mgr-field">
+              <label>Тема письма</label>
+              <input value={broadcastSubject} onChange={e => setBroadcastSubject(e.target.value)} placeholder="Например: Новый курс уже доступен!" />
+            </div>
+            <div className="mgr-field">
+              <label>HTML-содержимое</label>
+              <textarea
+                value={broadcastHtml}
+                onChange={e => setBroadcastHtml(e.target.value)}
+                placeholder="<h1>Привет!</h1><p>У нас отличные новости...</p>"
+                style={{ minHeight: 200, fontFamily: 'monospace', fontSize: 12 }}
+              />
+            </div>
+            <div>
+              <button className="btn-save" onClick={sendBroadcast} disabled={broadcastSending || !broadcastSubject.trim() || !broadcastHtml.trim()}>
+                <Send size={14} /> {broadcastSending ? 'Отправка...' : 'Разослать'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── AUDIT (admin only) ───────────────────────────── */}
+      {tab === 'audit' && isAdmin && (
+        <>
+          <div className="manager-toolbar">
+            <div style={{ fontSize: 16, fontWeight: 700 }}>📋 Журнал активности</div>
+          </div>
+          {auditStats && auditStats.byDay && (
+            <div className="chart-section" style={{ marginBottom: 16 }}>
+              <div className="chart-title">Активность по дням (7 дней)</div>
+              <div className="bar-chart">
+                {auditStats.byDay.map((d: any) => {
+                  const max = Math.max(...auditStats.byDay.map((x: any) => parseInt(x.count)), 1);
+                  const pct = Math.round((parseInt(d.count) / max) * 100);
+                  return (
+                    <div key={d.day} className="bar-row">
+                      <div className="bar-label">{new Date(d.day).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</div>
+                      <div className="bar-track">
+                        <div className="bar-fill" style={{ width: `${pct}%`, background: '#6366f1' }}>
+                          <span>{d.count}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {auditLogs.length === 0 ? (
+            <div className="empty-tab">
+              <div className="empty-tab-icon">📋</div>
+              <div className="empty-tab-title">Журнал пуст</div>
+            </div>
+          ) : (
+            <table className="manager-table">
+              <thead>
+                <tr>
+                  <th>Время</th>
+                  <th>Пользователь</th>
+                  <th>Действие</th>
+                  <th>Детали</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.map((log: any) => (
+                  <tr key={log.id}>
+                    <td style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{new Date(log.created_at).toLocaleString('ru-RU')}</td>
+                    <td>{log.user_name || '—'} <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>({log.user_email || 'system'})</span></td>
+                    <td><span className="status-badge public">{log.action}</span></td>
+                    <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{log.details || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
+      )}
+
+      {/* ── User Detail Modal ────────────────────────────── */}
+      {userDetail && (
+        <div className="mgr-modal-overlay" onClick={() => setUserDetail(null)}>
+          <div className="mgr-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <div className="mgr-modal-header">
+              <span className="mgr-modal-title">👤 {userDetail.name}</span>
+              <button className="mgr-modal-close" onClick={() => setUserDetail(null)}><X size={16} /></button>
+            </div>
+            <div className="mgr-modal-body" style={{ gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="report-card" style={{ padding: 12 }}>
+                  <div className="report-card-value" style={{ fontSize: 20 }}>{userDetail.total_xp}</div>
+                  <div className="report-card-label">XP</div>
+                </div>
+                <div className="report-card" style={{ padding: 12 }}>
+                  <div className="report-card-value" style={{ fontSize: 20 }}>{userDetail.streak}</div>
+                  <div className="report-card-label">Streak</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                <div><strong>Email:</strong> {userDetail.email}</div>
+                <div><strong>Роль:</strong> {userDetail.role}</div>
+                <div><strong>Активен:</strong> {userDetail.is_active ? 'Да' : 'Нет'}</div>
+                <div><strong>Дата регистрации:</strong> {userDetail.created_at ? new Date(userDetail.created_at).toLocaleDateString('ru-RU') : '—'}</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>📚 Курсы ({userDetail.courses?.length || 0})</div>
+              {userDetail.courses?.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Нет приобретённых курсов</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {userDetail.courses.map((c: Course) => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>
+                      <span style={{ fontSize: 18 }}>{c.emoji}</span>
+                      <span style={{ fontWeight: 600, fontSize: 13 }}>{c.title}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-muted)' }}>{c.language}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4 }}>🛒 Покупки ({userDetail.purchases?.length || 0})</div>
+              {userDetail.purchases?.length === 0 ? (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Нет покупок</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {userDetail.purchases.map((p: any) => (
+                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600 }}>{p.amount?.toLocaleString('ru-RU')} ₽</span>
+                      <span className={`status-badge ${p.status}`}>{p.status}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>{new Date(p.createdAt).toLocaleDateString('ru-RU')}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="mgr-modal-footer">
+              <button className="btn-cancel" onClick={() => setUserDetail(null)}>Закрыть</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Promo Modal ──────────────────────────────────── */}
+      {promoModal && (
+        <div className="mgr-modal-overlay" onClick={() => setPromoModal(false)}>
+          <div className="mgr-modal" onClick={e => e.stopPropagation()}>
+            <div className="mgr-modal-header">
+              <span className="mgr-modal-title">🏷 Новый промокод</span>
+              <button className="mgr-modal-close" onClick={() => setPromoModal(false)}><X size={16} /></button>
+            </div>
+            <div className="mgr-modal-body">
+              <div className="mgr-field">
+                <label>Код</label>
+                <input value={promoForm.code} onChange={e => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })} placeholder="SUMMER2026" />
+              </div>
+              <div className="mgr-fields-row">
+                <div className="mgr-field">
+                  <label>Скидка %</label>
+                  <input type="number" value={promoForm.discount_percent} onChange={e => setPromoForm({ ...promoForm, discount_percent: e.target.value })} placeholder="20" />
+                </div>
+                <div className="mgr-field">
+                  <label>Скидка ₽</label>
+                  <input type="number" value={promoForm.discount_amount} onChange={e => setPromoForm({ ...promoForm, discount_amount: e.target.value })} placeholder="500" />
+                </div>
+              </div>
+              <div className="mgr-fields-row">
+                <div className="mgr-field">
+                  <label>Лимит использований</label>
+                  <input type="number" value={promoForm.max_uses} onChange={e => setPromoForm({ ...promoForm, max_uses: e.target.value })} placeholder="100" />
+                </div>
+                <div className="mgr-field">
+                  <label>Истекает</label>
+                  <input type="datetime-local" value={promoForm.expires_at} onChange={e => setPromoForm({ ...promoForm, expires_at: e.target.value })} />
+                </div>
+              </div>
+              <div className="mgr-field">
+                <label>Тариф</label>
+                <select value={promoForm.applicable_tiers} onChange={e => setPromoForm({ ...promoForm, applicable_tiers: e.target.value })}>
+                  <option value="all">Все</option>
+                  <option value="standard">Standard</option>
+                  <option value="medium">Medium</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+              <div className="mgr-field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <input type="checkbox" checked={promoForm.is_active} onChange={e => setPromoForm({ ...promoForm, is_active: e.target.checked })} id="promo-active" />
+                <label htmlFor="promo-active" style={{ margin: 0 }}>Активен</label>
+              </div>
+            </div>
+            <div className="mgr-modal-footer">
+              <button className="btn-cancel" onClick={() => setPromoModal(false)}>Отмена</button>
+              <button className="btn-save" onClick={savePromocode} disabled={!promoForm.code.trim()}>
+                <Plus size={14} /> Создать
               </button>
             </div>
           </div>

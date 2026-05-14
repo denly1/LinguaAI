@@ -580,6 +580,8 @@
   cursor: pointer;
 }
 .btn-export:hover { border-color: var(--primary); color: var(--primary-light); }
+.btn-export.danger { color: #f87171; }
+.btn-export.danger:hover { border-color: #ef4444; color: #ef4444; }
 
 .btn-import {
   display: flex;
