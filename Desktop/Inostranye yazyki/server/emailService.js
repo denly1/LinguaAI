@@ -5,14 +5,14 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: 'smptxxxxxxxqq@mail.ru',
-    pass: 'fyqix07nULq6pCcw8Xqc'  // Пароль приложения Mail.ru (не основной пароль)
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS
   }
 });
 
 async function sendCourseReceipt(userEmail, userName, course, purchase) {
   const mailOptions = {
-    from: '"LinguaAI" <smptxxxxxxxqq@mail.ru>',
+    from: `"LinguaAI" <${process.env.MAIL_USER || 'no-reply@linguaai.ru'}>`,
     to: userEmail,
     subject: `Чек об оплате курса "${course.title}"`,
     html: `

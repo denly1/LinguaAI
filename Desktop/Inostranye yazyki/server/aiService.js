@@ -1,5 +1,3 @@
-// Прокси-сервис для чат-запросов LinguaAI
-// Ключ и модель задаются через server/.env (см. .env.example)
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'minimax/minimax-m2.5:free';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
