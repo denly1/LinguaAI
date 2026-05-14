@@ -342,3 +342,21 @@
 }
 
 .vt-reset-btn:hover { color: var(--text); }
+
+@media (max-width: 768px) {
+  .vt-page { padding: 16px; }
+  .vt-header-left h1 { font-size: 20px; }
+  .vt-header-icon { width: 36px; height: 36px; }
+  .vt-card { padding: 20px; }
+  .vt-word { font-size: 28px; }
+  .vt-mic-btn { width: 56px; height: 56px; }
+  .vt-result-text { font-size: 14px; }
+}
+
+@media (max-width: 480px) {
+  .vt-page { padding: 12px; }
+  .vt-card { padding: 16px; }
+  .vt-word { font-size: 24px; }
+  .vt-controls { flex-direction: column; gap: 8px; }
+  .vt-btn { width: 100%; justify-content: center; }
+}

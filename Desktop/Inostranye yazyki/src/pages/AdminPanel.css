@@ -667,3 +667,23 @@
   border: 1px solid rgba(99,102,241,0.2);
 }
 .action-btn.view:hover { background: rgba(99,102,241,0.2); }
+
+@media (max-width: 768px) {
+  .admin-page { padding: 16px; }
+  .admin-header { flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .admin-header h1 { font-size: 22px; }
+  .admin-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .admin-stat { padding: 14px; }
+  .admin-stat-value { font-size: 22px; }
+  .admin-table { font-size: 12px; }
+  .admin-table th, .admin-table td { padding: 8px 10px; }
+  .admin-tabs { gap: 4px; }
+  .admin-tab { padding: 8px 12px; font-size: 12px; }
+  .action-btn { padding: 5px 10px; font-size: 11px; }
+}
+
+@media (max-width: 480px) {
+  .admin-page { padding: 12px; }
+  .admin-stats { grid-template-columns: 1fr; }
+  .admin-table th:nth-child(3), .admin-table td:nth-child(3) { display: none; }
+}

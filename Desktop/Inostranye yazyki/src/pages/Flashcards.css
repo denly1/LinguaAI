@@ -639,3 +639,26 @@ kbd {
   font-family: monospace;
   color: var(--text);
 }
+
+@media (max-width: 768px) {
+  .flashcards-page { padding: 16px; }
+  .flashcards-header { flex-direction: column; gap: 12px; margin-bottom: 16px; }
+  .flashcards-header h1 { font-size: 22px; }
+  .fc-actions { width: 100%; }
+  .fc-filters { margin-bottom: 16px; }
+  .study-card { padding: 24px; border-radius: 14px; }
+  .study-word { font-size: 26px; }
+  .study-phonetic { font-size: 14px; }
+  .quiz-options { grid-template-columns: 1fr; }
+  .difficulty-buttons { flex-direction: column; gap: 6px; }
+  .flashcard-card { padding: 14px; }
+  .flashcard-word { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  .flashcards-page { padding: 12px; }
+  .study-card { padding: 16px; }
+  .study-word { font-size: 22px; }
+  .study-example { font-size: 12px; }
+  .filter-btn { padding: 6px 10px; font-size: 12px; }
+}

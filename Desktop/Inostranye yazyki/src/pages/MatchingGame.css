@@ -180,3 +180,19 @@
 .mrc-lbl { font-size: 11px; color: var(--text-muted); }
 
 .match-result-actions { display: flex; gap: 12px; }
+
+@media (max-width: 768px) {
+  .matching-page { padding: 16px; }
+  .matching-setup { padding: 40px 20px; }
+  .matching-setup h1 { font-size: 22px; }
+  .matching-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .match-card { padding: 16px; font-size: 14px; }
+  .match-hud { flex-direction: column; gap: 8px; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .matching-page { padding: 12px; }
+  .matching-grid { grid-template-columns: 1fr; }
+  .match-card { padding: 12px; font-size: 13px; }
+  .match-result-grid { grid-template-columns: 1fr 1fr; }
+}

@@ -327,3 +327,23 @@
 .lb-gap { margin-left: auto; }
 
 .gap-xp { color: #34d399; }
+
+@media (max-width: 768px) {
+  .leaderboard-page { padding: 16px; }
+  .lb-header { flex-direction: column; gap: 12px; margin-bottom: 20px; }
+  .lb-header h1 { font-size: 22px; }
+  .lb-period-tabs { align-self: stretch; }
+  .lb-row { padding: 10px 14px; gap: 10px; }
+  .lb-rank { width: 28px; font-size: 13px; }
+  .lb-avatar { width: 32px; height: 32px; font-size: 13px; }
+  .lb-name { font-size: 13px; }
+  .lb-xp { font-size: 13px; }
+  .lb-my-rank { padding: 12px 14px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .leaderboard-page { padding: 12px; }
+  .lb-row { padding: 8px 10px; }
+  .lb-avatar { display: none; }
+  .lb-name { font-size: 12px; }
+}

@@ -583,3 +583,39 @@
   margin-left: auto;
   flex-shrink: 0;
 }
+
+@media (max-width: 768px) {
+  .dashboard { padding: 16px; }
+  .dashboard-header {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .dashboard-title { font-size: 22px; }
+  .streak-badge { align-self: flex-start; }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card { padding: 14px; gap: 10px; }
+  .stat-icon { width: 36px; height: 36px; }
+  .stat-value { font-size: 20px; }
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .today-done { font-size: 32px; }
+  .today-goal { font-size: 20px; }
+  .today-sep { font-size: 18px; }
+  .ai-quick-ask { padding: 12px 14px; }
+  .ai-quick-icon { width: 36px; height: 36px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stat-card { padding: 12px; }
+  .stat-icon { width: 32px; height: 32px; }
+  .stat-value { font-size: 18px; }
+  .stat-label { font-size: 11px; }
+}
