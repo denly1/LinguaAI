@@ -173,8 +173,18 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      <div className="ai-quick-ask" onClick={() => navigate('/ai-tutor')}>
+        <div className="ai-quick-icon"><Brain size={20} /></div>
+        <div className="ai-quick-text">
+          <div className="ai-quick-title">Спросите AI</div>
+          <div className="ai-quick-sub">Перевод, грамматика, диалоги — мгновенный ответ</div>
+        </div>
+        <ArrowRight size={18} className="ai-quick-arrow" />
+      </div>
+
       <div className="stats-grid">
-        <div className="stat-card" onClick={() => navigate('/progress')}>
+        <div className="stat-card" onClick={() => navigate('/progress')}
+>
           <div className="stat-icon" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8' }}>
             <Zap size={20} />
           </div>
